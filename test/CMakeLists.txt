@@ -4,5 +4,4 @@ function (add_test target)
 endfunction ()
 
 add_test(list_test list_test.cc)
-add_executable(list_test2 list_test.c)
-target_link_libraries(list_test2 zda)
+add_test(rb_tree_test rb_tree_test.cc)
