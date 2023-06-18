@@ -2,6 +2,7 @@
 # 成员访问符的编译
 # 0表示一个tab
 AccessModifierOffset: -1
+IndentGotoLabels: false
 
 # 小括号对齐，用于对齐函数参数和实参
 AlignAfterOpenBracket: BlockIndent
@@ -137,11 +138,11 @@ AlignConsecutiveAssignments:
   AcrossComments: true
 
 AlignConsecutiveMacros: true
-StatementMacros: ["Str2Int", "Str2IntForOne", "AppendInt_Macro", "PrependInt_Macro", 
-  "GetReadBeginInt_Macro", "ReadInt_Macro", "Append_Macro", "Prepend_Macro", "GetReadBegin_Macro", 
-  "Read_Macro", "AdvanceRead_Macro", "FIELD_SET_HAS_DEFINE", "DEFINE_FIELD_SET_HAS_METHOD", "zda_list_iterate",
-  "prepare_list"]
+StatementMacros: [
+  "zda_list_iterate",
+  "prepare_list", "zda_def_rb_tree_insert_malloc", "zda_def_rb_tree_insert",
+  "zda_def_rb_tree_remove", "zda_decl_rb_tree_remove", "zda_decl_rb_tree_search", "zda_def_rb_tree_search"]
+
 # 自动给宏加上缩进
 # Hash is the '#' sign
 IndentPPDirectives: AfterHash
-
