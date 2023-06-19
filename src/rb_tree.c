@@ -7,6 +7,9 @@
 #include "zda/util/tcolor.h"
 #include "zda/util/assert.h"
 
+/* To avoid the conflict with the __name of compiler and library, use _name to define the private
+ * functions */
+
 /*********************************/
 /* Color APIs                    */
 /*********************************/
@@ -39,6 +42,101 @@ static zda_inline int _zda_rb_node_is_single(zda_rb_header_t *header, zda_rb_nod
 static zda_inline int _zda_rb_node_is_header(zda_rb_header_t *header, zda_rb_node_t *node)
 {
   return node == &header->node;
+}
+
+static zda_inline int _rb_node_is_lean_left(zda_rb_node_t *node)
+{
+  return node->parent == node->parent->parent->left;
+}
+static zda_inline int _rb_node_is_lean_right(zda_rb_node_t *node)
+{
+  return node->parent == node->parent->parent->right;
+}
+static zda_inline int _rb_node_is_left(zda_rb_node_t *node) { return node->parent->left == node; }
+static zda_inline int _rb_node_is_right(zda_rb_node_t *node) { return node->parent->right == node; }
+static zda_inline void _zda_rb_node_set_root(zda_rb_header_t *header, zda_rb_node_t *new_root)
+{
+  header->node.parent = new_root;
+}
+static zda_inline int _zda_rb_node_is_root(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  assert(!_zda_rb_node_is_header(header, node));
+  return node->parent == &header->node;
+}
+
+static zda_inline void _rb_node_right_rotate(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  /*
+   *        B          A
+   *      /  \   =>   / \
+   *     A   C       SA  B
+   *   /  \             /  \
+   *  SA  SB           SB  C
+   */
+  assert(node->left);
+  zda_rb_node_t *new_root = node->left;
+
+  node->left = new_root->right;
+  if (zda_rb_node_is_nil(header, node->left)) node->left->parent = node;
+
+  new_root->right       = node;
+  zda_rb_node_t *parent = node->parent;
+
+  if (!_zda_rb_node_is_header(header, parent)) {
+    if (parent->left == node) {
+      parent->left = new_root;
+    } else if (parent->right == node) {
+      parent->right = new_root;
+    }
+  } else {
+    _zda_rb_node_set_root(header, new_root);
+  }
+  new_root->parent = parent;
+  node->parent     = new_root;
+}
+
+static zda_inline void _rb_node_left_rotate(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  /* Similar to the right rotate. */
+  assert(node->right);
+  zda_rb_node_t *new_root = node->right;
+
+  node->right = new_root->left;
+  if (!zda_rb_node_is_nil(header, node->right)) node->right->parent = node;
+
+  new_root->left        = node;
+  zda_rb_node_t *parent = node->parent;
+  if (!_zda_rb_node_is_header(header, parent)) {
+    if (parent->left == node) {
+      parent->left = new_root;
+    } else if (parent->right == node) {
+      parent->right = new_root;
+    }
+  } else {
+    _zda_rb_node_set_root(header, new_root);
+  }
+  new_root->parent = parent;
+  node->parent     = new_root;
+}
+
+static zda_inline void _zda_rb_header_set_minimum(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  header->node.left = node;
+}
+
+static zda_inline void _zda_rb_header_set_maximum(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  header->node.right = node;
+}
+
+static zda_inline int _zda_rb_header_is_minimum(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  return header->node.left == node;
+}
+
+static zda_inline int _zda_rb_header_is_maximum(zda_rb_header_t *header, zda_rb_node_t *node)
+{
+  return header->node.right == node;
 }
 
 void zda_rb_header_init(zda_rb_header_t *header)
@@ -143,10 +241,10 @@ zda_rb_node_t *zda_rb_node_get_predecessor(zda_rb_header_t *header, zda_rb_node_
   return parent;
 }
 
-void zda_rb_tree_entry_resuse(zda_rb_header_t *header, void(entry_cb)(zda_rb_node_t *node))
+void zda_rb_tree_entry_reuse(zda_rb_header_t *header, void(entry_cb)(zda_rb_node_t *node))
 {
   zda_rb_node_t *root = zda_rb_tree_get_root(header);
-  while (!zda_rb_node_is_nil(header, root)) {
+  while (!_zda_rb_node_is_header(header, root)) {
     if (!zda_rb_node_is_nil(header, root->left)) {
       root = root->left;
     } else if (!zda_rb_node_is_nil(header, root->right)) {
@@ -163,102 +261,6 @@ void zda_rb_tree_entry_resuse(zda_rb_header_t *header, void(entry_cb)(zda_rb_nod
       root = parent;
     }
   }
-}
-
-/* To avoid the conflict with the __name of compiler and library, use _name to define the private
- * functions */
-static zda_inline int _rb_node_is_lean_left(zda_rb_node_t *node)
-{
-  return node->parent == node->parent->parent->left;
-}
-static zda_inline int _rb_node_is_lean_right(zda_rb_node_t *node)
-{
-  return node->parent == node->parent->parent->right;
-}
-static zda_inline int _rb_node_is_left(zda_rb_node_t *node) { return node->parent->left == node; }
-static zda_inline int _rb_node_is_right(zda_rb_node_t *node) { return node->parent->right == node; }
-static zda_inline void _zda_rb_node_set_root(zda_rb_header_t *header, zda_rb_node_t *new_root)
-{
-  header->node.parent = new_root;
-}
-static zda_inline int _zda_rb_node_is_root(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  return node->parent == &header->node;
-}
-
-static zda_inline void _rb_node_right_rotate(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  /*
-   *        B          A
-   *      /  \   =>   / \
-   *     A   C       SA  B
-   *   /  \             /  \
-   *  SA  SB           SB  C
-   */
-  assert(node->left);
-  zda_rb_node_t *new_root = node->left;
-
-  node->left = new_root->right;
-  if (zda_rb_node_is_nil(header, node->left)) node->left->parent = node;
-
-  new_root->right       = node;
-  zda_rb_node_t *parent = node->parent;
-
-  if (!_zda_rb_node_is_header(header, parent)) {
-    if (parent->left == node) {
-      parent->left = new_root;
-    } else if (parent->right == node) {
-      parent->right = new_root;
-    }
-  } else {
-    _zda_rb_node_set_root(header, new_root);
-  }
-  new_root->parent = parent;
-  node->parent     = new_root;
-}
-
-static zda_inline void _rb_node_left_rotate(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  /* Similar to the right rotate. */
-  assert(node->right);
-  zda_rb_node_t *new_root = node->right;
-
-  node->right = new_root->left;
-  if (!zda_rb_node_is_nil(header, node->right)) node->right->parent = node;
-
-  new_root->left        = node;
-  zda_rb_node_t *parent = node->parent;
-  if (!_zda_rb_node_is_header(header, parent)) {
-    if (parent->left == node) {
-      parent->left = new_root;
-    } else if (parent->right == node) {
-      parent->right = new_root;
-    }
-  } else {
-    _zda_rb_node_set_root(header, new_root);
-  }
-  new_root->parent = parent;
-  node->parent     = new_root;
-}
-
-static zda_inline void _zda_rb_header_set_minimum(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  header->node.left = node;
-}
-
-static zda_inline void _zda_rb_header_set_maximum(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  header->node.right = node;
-}
-
-static zda_inline int _zda_rb_header_is_minimum(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  return header->node.left == node;
-}
-
-static zda_inline int _zda_rb_header_is_maximum(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  return header->node.right == node;
 }
 
 /************************************/
