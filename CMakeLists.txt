@@ -3,12 +3,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(zda VERSION 1.0)
 
-set (CXX_FLAGS -fvisibility=hidden) 
-set (C_FLAGS ${CXX_FLAGS})
-string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
-string(REPLACE ";" " " CMAKE_C_FLAGS "${C_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+include(cmake/cache_var.cmake)
+include(cmake/compile_flag.cmake)
 
 aux_source_directory(src ZDA_SRC)
 
@@ -37,4 +33,10 @@ include(GNUInstallDirs)
 install(TARGETS zda DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY zda DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-add_subdirectory(test)
+if (ZDA_INCLUDE_TEST)
+  add_subdirectory(test)
+endif ()
+
+if (ZDA_INCLUDE_BENCHMARK)
+  add_subdirectory(benchmark)
+endif ()
