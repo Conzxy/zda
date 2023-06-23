@@ -7,11 +7,22 @@ I use `void*` and intrusive design to make the data structure be generic, more f
 ## Schedule
 * [x] [Intrusive Red-black tree](zda/rb_tree.h)  
 相关文档参考[rb_tree.h](zda/rb_tree.h)  
-使用方式参考[单元测试文件](test/rb_tree_test.cc)和[基准测试文件](benchmark/rb_tree_bench.cc)
-* [x] [Intrusive double linked-list](zda/list.h)
-* [x] [Intrusive single linked-list](zda/slist.h)
+使用方式参考[单元测试文件](test/rb_tree_test.cc)和[基准测试文件](benchmark/rb_tree_bench.cc)  
+* [x] [Intrusive double linked-list](zda/list.h)  
+  * [x] Sentinel version  
+  * [x] No sentinel version  
+相关文档参考[list.h](zda/list.h)  
+使用方式参考[单元测试文件](test/ht_test.cc)  
+* [x] [Intrusive single linked-list](zda/slist.h)  
+  * [x] Sentinel version  
+  * [x] No sentinel version  
+相关文档参考[slist.h](zda/slist.h)  
+使用方式参考[单元测试文件](test/slist_test.cc)  
+* [x] [Half-Intrusive hash table(Based on single-linked-list)](zda/ht.h)  
+相关文档参考[ht.h](zda/ht.h)  
+使用方式参考[单元测试文件](test/ht_test.cc)  
+* [ ] Half-Intrusive hash table(Based on Red-black tree)
 * [ ] Intrusive avl tree
-* [ ] Half-Intrusive hash table
 
 ## Benchmark
 TODO...
