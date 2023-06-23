@@ -12,22 +12,21 @@ EXTERN_C_BEGIN
 #endif
 
 /**
- * @brief The node store the user data(for user side)
+ * @brief The node that stores the user data(for user side)
  */
 typedef struct zda_slist_node {
   struct zda_slist_node *next;
 } zda_slist_node_t;
 
 /**
- * @brief Single linked-list with a sentinel header that don't store data
+ * @brief Single-linked-list with a sentinel header that don't store data
  */
 typedef struct zda_slist_header {
   zda_slist_node_t node;
 } zda_slist_header_t;
 
 /**
- * @brief Single linked-list with a heaeder that stores user data
- *
+ * @brief Single-linked-list with a heaeder that stores user data
  */
 typedef struct zda_slist_header2 {
   zda_slist_node_t *node;
