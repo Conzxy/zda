@@ -11,14 +11,14 @@ int int_entry_cmp(int_entry_t const *entry, int key) { return entry->key - key; 
 
 int int_entry_cmp2(zda_rb_node_t const *node, void const *key)
 {
-  int_entry_t const *entry = zda_rb_node_entry(node, int_entry_t const);
+  int_entry_t const *entry = zda_rb_entry(node, int_entry_t const);
   int const         *_key  = (int const *)key;
   return entry->key - *_key;
 }
 
 int print_entry(void const *node)
 {
-  int_entry_t *entry = zda_rb_node_entry((zda_rb_node_t *)node, int_entry);
+  int_entry_t *entry = zda_rb_entry((zda_rb_node_t *)node, int_entry);
   return printf("%d", entry->key);
 }
 
@@ -57,15 +57,15 @@ TEST(rb_tree_test, insert)
     }
   }
 
-  auto min_entry = zda_rb_node_entry(zda_rb_tree_first(&header), int_entry_t);
-  auto max_entry = zda_rb_node_entry(zda_rb_tree_last(&header), int_entry_t);
+  auto min_entry = zda_rb_entry(zda_rb_tree_first(&header), int_entry_t);
+  auto max_entry = zda_rb_entry(zda_rb_tree_last(&header), int_entry_t);
 
   printf("min_val = %d\n", min_entry->key);
   printf("max_val = %d\n", max_entry->key);
 
   zda_rb_tree_iterate(&header)
   {
-    int_entry_t *entry = zda_rb_node_entry(pos, int_entry_t);
+    int_entry_t *entry = zda_rb_entry(pos, int_entry_t);
     printf("val: %d\n", entry->key);
   }
 
@@ -82,7 +82,7 @@ TEST(rb_tree_test, search)
   for (int i = 0; i < n; i++) {
     auto res = zda_rb_tree_search(&header, &i, int_entry_cmp2);
     ASSERT_TRUE(res);
-    auto entry = zda_rb_node_entry(res, int_entry_t);
+    auto entry = zda_rb_entry(res, int_entry_t);
     EXPECT_EQ(entry->key, i);
   }
 }
@@ -102,7 +102,7 @@ TEST(rb_tree_test, remove)
 
     zda_rb_tree_print_tree(&header, print_entry);
     fflush(stdout);
-    free(zda_rb_node_entry(old_node, int_entry_t));
+    free(zda_rb_entry(old_node, int_entry_t));
   }
 
   printf("Remove complete: \n");

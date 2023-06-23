@@ -60,8 +60,8 @@ static zda_inline void _zda_rb_node_set_root(zda_rb_header_t *header, zda_rb_nod
 }
 static zda_inline int _zda_rb_node_is_root(zda_rb_header_t *header, zda_rb_node_t *node)
 {
-  assert(!_zda_rb_node_is_header(header, node));
-  return node->parent == &header->node;
+  // assert(!_zda_rb_node_is_header(header, node));
+  return node->parent == &header->node && !_zda_rb_node_is_header(header, node);
 }
 
 static zda_inline void _rb_node_right_rotate(zda_rb_header_t *header, zda_rb_node_t *node)
