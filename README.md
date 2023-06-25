@@ -26,12 +26,12 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Half-Intrusive hash table(Based on single-linked-list)](zda/ht.h)  
 相关文档参考[ht.h](zda/ht.h)  
 使用方式参考[单元测试文件](test/ht_test.cc)  
-* [x] [Reserved array](zda/reserved_array.hpp)
+* [x] [Reserved array](zda/reserved_array.hpp)  
 `Reserved array`是一个预分配的数组，用户在使用前必须先分配空间，然后访问元素。  
 同时，这个数据结构也是`Dynamic array`的底层实现。  
 相关文档参考[reserved_array.h](zda/reserved_array.hpp)  
 使用风格类似STL。
-* [x] [Dynamic array](zda/darray.hpp)
+* [x] [Dynamic array](zda/darray.hpp)  
 相关文档参考[darray.hpp](zda/darray.hpp)  
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
 * [ ] Half-Intrusive hash table(Based on Red-black tree)
