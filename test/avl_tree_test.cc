@@ -14,10 +14,23 @@ static int print_int_entry(zda_avl_node_t const *node)
 }
 
 static zda_inline int int_entry_cmp(int x, int y) { return x - y; }
-zda_def_avl_tree_insert_check(avl_tree_insert_check_int_entry, int, int_entry_t, key, int_entry_cmp)
+static zda_inline int int_entry_get_key(int_entry_t const *entry) noexcept { return entry->key; }
+zda_def_avl_tree_insert_check(
+    avl_tree_insert_check_int_entry,
+    int,
+    int_entry_t,
+    int_entry_get_key,
+    int_entry_cmp
+)
 zda_def_avl_tree_destroy(avl_tree_destroy_int_entry, int_entry_t, free)
-zda_def_avl_tree_search(avl_tree_search_int_entry, int, int_entry_t, key, int_entry_cmp)
-zda_def_avl_tree_remove(avl_tree_remove_int_entry, int, int_entry, key, int_entry_cmp)
+zda_def_avl_tree_search(
+    avl_tree_search_int_entry,
+    int,
+    int_entry_t,
+    int_entry_get_key,
+    int_entry_cmp
+)
+zda_def_avl_tree_remove(avl_tree_remove_int_entry, int, int_entry, int_entry_get_key, int_entry_cmp)
 
 TEST(avl_tree_test, insert)
 {
@@ -33,7 +46,6 @@ TEST(avl_tree_test, insert)
     ASSERT_FALSE(p_dup);
 
     entries[i].key = i;
-    zda_avl_node_init(&entries[i].node);
     zda_avl_tree_insert_commit(&tree, &commit_ctx, &entries[i].node);
 
     p_dup = avl_tree_insert_check_int_entry(&tree, i, &commit_ctx);
@@ -56,7 +68,6 @@ zda_inline static int_entry_t *new_int_entry(int key)
 {
   auto ret = (int_entry_t *)malloc(sizeof(int_entry_t));
   ret->key = key;
-  zda_avl_node_init(&ret->node);
   return ret;
 }
 

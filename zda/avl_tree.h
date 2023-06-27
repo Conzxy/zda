@@ -28,6 +28,12 @@ typedef struct zda_avl_node {
   size_t               height;
 } zda_avl_node_t;
 
+typedef struct zda_avl_node_hook {
+  zda_avl_node_t node;
+} zda_avl_node_hook_t;
+
+#define ZDA_AVL_NODE_HOOK zda_avl_node_t node
+
 #define zda_avl_node_entry(p_node, type, node) container_of(p_node, type, node)
 
 /* Like `zda_avl_node_entry` but the member name is specified by `node` */
@@ -159,14 +165,14 @@ typedef struct zda_avl_commit_ctx {
   zda_avl_node_t  *p_parent;
 } zda_avl_commit_ctx_t;
 
-#define zda_avl_tree_insert_check_inplace(tree, key, type, member, cmp_cb, commit_ctx, p_dup)      \
+#define zda_avl_tree_insert_check_inplace(tree, key, type, get_key, cmp_cb, commit_ctx, p_dup)     \
   do {                                                                                             \
     zda_avl_tree_t  *__tree       = tree;                                                          \
-    zda_avl_node_t **p_slot       = &(tree->node);                                                 \
+    zda_avl_node_t **p_slot       = &(__tree->node);                                               \
     zda_avl_node_t  *track_parent = NULL;                                                          \
     p_dup                         = NULL;                                                          \
     for (; *p_slot;) {                                                                             \
-      int res = cmp_cb(zda_avl_entry(*p_slot, type)->member, key);                                 \
+      int res = cmp_cb(get_key(zda_avl_entry(*p_slot, type)), key);                                \
       if (res < 0) {                                                                               \
         track_parent = *p_slot;                                                                    \
         p_slot       = &(*p_slot)->right;                                                          \
@@ -186,11 +192,11 @@ typedef struct zda_avl_commit_ctx {
 #define zda_decl_avl_tree_insert_check(func_name, key_type, type)                                  \
   type *func_name(zda_avl_tree_t *tree, key_type key, zda_avl_commit_ctx_t *p_ctx)
 
-#define zda_def_avl_tree_insert_check(func_name, key_type, type, member, cmp)                      \
+#define zda_def_avl_tree_insert_check(func_name, key_type, type, get_key, cmp)                     \
   zda_decl_avl_tree_insert_check(func_name, key_type, type)                                        \
   {                                                                                                \
     type *p_dup;                                                                                   \
-    zda_avl_tree_insert_check_inplace(tree, key, type, member, cmp, *p_ctx, p_dup);                \
+    zda_avl_tree_insert_check_inplace(tree, key, type, get_key, cmp, *p_ctx, p_dup);               \
     return p_dup;                                                                                  \
   }
 
@@ -204,38 +210,38 @@ ZDA_API void zda_avl_tree_insert_commit(
     zda_avl_node_t       *new_node
 ) zda_noexcept;
 
-#define zda_decl_avl_tree_insert_node(func_name)                                                   \
-  type *func_name(zda_avl_tree_t *tree, zda_avl_node_t *node)
+#define zda_decl_avl_tree_insert_node(func_name, type)                                             \
+  type *func_name(zda_avl_tree_t *tree, type const *entry)
 
-#define zda_def_avl_tree_insert_node(func_name, tree, node, type, member, cmp_cb)                  \
-  zda_decl_avl_tree_insert_node(func_name)                                                         \
+#define zda_def_avl_tree_insert_node(func_name, tree, node, type, get_key, cmp_cb)                 \
+  zda_decl_avl_tree_insert_node(func_name, type)                                                   \
   {                                                                                                \
     zda_avl_commit_ctx_t cmt_ctx;                                                                  \
     type                *p_dup;                                                                    \
     zda_avl_tree_insert_check_inplace(                                                             \
         tree,                                                                                      \
-        node->member,                                                                              \
+        get_key(entry),                                                                            \
         type,                                                                                      \
-        member,                                                                                    \
+        get_key,                                                                                   \
         cmp_cb,                                                                                    \
-        commit_ctx,                                                                                \
+        cmt_ctx,                                                                                   \
         p_dup                                                                                      \
     );                                                                                             \
     if (p_dup) return p_dup;                                                                       \
-    zda_avl_tree_insert_commit(tree, &cmt_ctx, node);                                              \
-    return node;                                                                                   \
+    zda_avl_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                      \
+    return entry;                                                                                  \
   }
 
 /********************************/
 /* Search APIs */
 /********************************/
-#define zda_avl_tree_search_inplace(tree, key, type, member, cmp_cb, p_result)                     \
+#define zda_avl_tree_search_inplace(tree, key, type, get_key, cmp_cb, p_result)                    \
   do {                                                                                             \
     zda_avl_tree_t *__tree = tree;                                                                 \
     p_result               = NULL;                                                                 \
     zda_avl_node_t *root   = __tree->node;                                                         \
     while (root) {                                                                                 \
-      int res = cmp_cb(zda_avl_entry(root, type)->member, key);                                    \
+      int res = cmp_cb(get_key(zda_avl_entry(root, type)), key);                                   \
       if (res < 0) {                                                                               \
         root = root->right;                                                                        \
       } else if (res > 0) {                                                                        \
@@ -250,11 +256,11 @@ ZDA_API void zda_avl_tree_insert_commit(
 #define zda_decl_avl_tree_search(func_name, key_type, type)                                        \
   type *func_name(zda_avl_tree_t *tree, key_type key)
 
-#define zda_def_avl_tree_search(func_name, key_type, type, member, cmp)                            \
+#define zda_def_avl_tree_search(func_name, key_type, type, get_key, cmp)                           \
   zda_decl_avl_tree_search(func_name, key_type, type)                                              \
   {                                                                                                \
     type *result;                                                                                  \
-    zda_avl_tree_search_inplace(tree, key, type, member, cmp, result);                             \
+    zda_avl_tree_search_inplace(tree, key, type, get_key, cmp, result);                            \
     return result;                                                                                 \
   }
 
@@ -303,9 +309,9 @@ ZDA_API void zda_avl_tree_insert_commit(
 ZDA_API
 void zda_avl_tree_remove_node(zda_avl_tree_t *tree, zda_avl_node_t *old_node) zda_noexcept;
 
-#define zda_avl_tree_remove_inplace(tree, key, type, member, cmp_cb, p_entry)                      \
+#define zda_avl_tree_remove_inplace(tree, key, type, get_key, cmp_cb, p_entry)                     \
   do {                                                                                             \
-    zda_avl_tree_search_inplace(tree, key, type, member, cmp_cb, p_entry);                         \
+    zda_avl_tree_search_inplace(tree, key, type, get_key, cmp_cb, p_entry);                        \
     if (p_entry) {                                                                                 \
       zda_avl_tree_remove_node(tree, &p_entry->node);                                              \
     }                                                                                              \
@@ -314,11 +320,11 @@ void zda_avl_tree_remove_node(zda_avl_tree_t *tree, zda_avl_node_t *old_node) zd
 #define zda_decl_avl_tree_remove(func_name, key_type, type)                                        \
   type *func_name(zda_avl_tree_t *tree, key_type key)
 
-#define zda_def_avl_tree_remove(func_name, key_type, type, member, cmp_cb)                         \
+#define zda_def_avl_tree_remove(func_name, key_type, type, get_key, cmp_cb)                        \
   zda_decl_avl_tree_remove(func_name, key_type, type)                                              \
   {                                                                                                \
     type *ret;                                                                                     \
-    zda_avl_tree_remove_inplace(tree, key, type, member, cmp_cb, ret);                             \
+    zda_avl_tree_remove_inplace(tree, key, type, get_key, cmp_cb, ret);                            \
     return ret;                                                                                    \
   }
 
