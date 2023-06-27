@@ -34,7 +34,13 @@
 #define ZDA_NULL NULL
 
 /* The `typeof()` is a extension, I don't use it here */
-#define zda_max(x, y) (x > y ? x : y)
-#define zda_min(x, y) (x < y ? x : y)
+#define zda_max(x, y) ((x) > (y) ? (x) : (y))
+#define zda_min(x, y) ((x) < (y) ? (x) : (y))
+
+#ifdef __cplusplus
+#  define zda_noexcept noexcept
+#else
+#  define zda_noexcept
+#endif
 
 #endif /* Header Guard */
