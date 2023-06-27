@@ -1,3 +1,4 @@
+// SPDX-LICENSE-IDENTIFIER: MIT
 #ifndef _ZSTL_MACROS_H_
 #define _ZSTL_MACROS_H_
 
