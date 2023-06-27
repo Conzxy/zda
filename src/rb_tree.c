@@ -77,7 +77,7 @@ static zda_inline void _rb_node_right_rotate(zda_rb_header_t *header, zda_rb_nod
   zda_rb_node_t *new_root = node->left;
 
   node->left = new_root->right;
-  if (zda_rb_node_is_nil(header, node->left)) node->left->parent = node;
+  if (!zda_rb_node_is_nil(header, node->left)) node->left->parent = node;
 
   new_root->right       = node;
   zda_rb_node_t *parent = node->parent;
