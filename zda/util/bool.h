@@ -1,3 +1,4 @@
+// SPDX-LICENSE-IDENTIFIER: MIT
 #ifndef _ZDA_UTIL_BOOL_H__
 #define _ZDA_UTIL_BOOL_H__
 

@@ -1,3 +1,4 @@
+// SPDX-LICENSE-IDENTIFIER: MIT
 #include "zda/ht.h"
 #include <stdio.h>
 

@@ -1,3 +1,4 @@
+// SPDX-LICENSE-IDENTIFIER: MIT
 #ifndef _ZDA_HT_H__
 #define _ZDA_HT_H__
 
