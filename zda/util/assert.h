@@ -4,7 +4,7 @@
 
 #include <assert.h>
 
-#define zda_assert0(cond)     assert((cond) && (msg))
+#define zda_assert0(cond)     assert((cond))
 #define zda_assert(cond, msg) assert((cond) && (msg));
 
 #endif /* Header guard */
