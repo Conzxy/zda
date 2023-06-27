@@ -182,6 +182,7 @@ void zda_avl_tree_insert_commit(
     zda_avl_node_t       *new_node
 ) zda_noexcept
 {
+  zda_avl_node_init(new_node);
   *p_ctx->pp_slot = new_node;
   if (!p_ctx->p_parent) {
     new_node->height = 1;
