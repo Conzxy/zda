@@ -13,6 +13,9 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Intrusive Red-black tree](zda/rb_tree.h)  
 相关文档参考[rb_tree.h](zda/rb_tree.h)  
 使用方式参考[单元测试文件](test/rb_tree_test.cc)和[基准测试文件](benchmark/rb_tree_bench.cc)  
+* [x] [Intrusive avl tree](zda/avl_tree.h)  
+相关文档参考[avl_tree.h](zda/avl_tree.h)  
+使用风格类似 `Red-Black Tree`，亦可参考[单元测试文件](test/darray_test2.cc)  
 * [x] [Intrusive double linked-list](zda/list.h)  
   * [x] Sentinel version  
   * [x] No sentinel version  
@@ -34,11 +37,7 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Dynamic array](zda/darray.hpp)  
 相关文档参考[darray.hpp](zda/darray.hpp)  
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
-* [x] [Intrusive avl tree](zda/avl_tree.h)  
-相关文档参考[avl_tree.h](zda/avl_tree.h)  
-使用风格类似 `Red-Black Tree`，亦可参考[单元测试文件](test/darray_test2.cc)  
 * [ ] Half-Intrusive hash table(Based on BST)
-
 
 ## Benchmark
 TODO...
