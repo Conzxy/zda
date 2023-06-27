@@ -34,8 +34,11 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Dynamic array](zda/darray.hpp)  
 相关文档参考[darray.hpp](zda/darray.hpp)  
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
-* [ ] Half-Intrusive hash table(Based on Red-black tree)
-* [ ] Intrusive avl tree
+* [x] [Intrusive avl tree](zda/avl_tree.h)  
+相关文档参考[avl_tree.h](zda/avl_tree.h)  
+使用风格类似 `Red-Black Tree`，亦可参考[单元测试文件](test/darray_test2.cc)  
+* [ ] Half-Intrusive hash table(Based on BST)
+
 
 ## Benchmark
 TODO...
