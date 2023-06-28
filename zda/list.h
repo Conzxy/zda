@@ -19,6 +19,8 @@ typedef struct zda_list_node {
   struct zda_list_node *prev;
 } zda_list_node_t;
 
+#define ZDA_LIST_HOOK zda_list_node_t node
+
 /**
  * @brief Double-linked-list with a sentinel header that don't store data
  */
@@ -49,7 +51,7 @@ static zda_inline void zda_list_header_init(zda_list_header_t *header)
   zda_list_node_sentinel_init(&header->node);
 }
 
-static zda_inline zda_bool zda_list_is_empty(zda_list_header_t *header)
+static zda_inline zda_bool zda_list_is_empty(zda_list_header_t const *header)
 {
   return header->node.prev == &header->node;
 }
