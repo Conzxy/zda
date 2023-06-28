@@ -47,7 +47,7 @@ static zda_inline void zda_slist_sentinel_init(zda_slist_header_t *header)
 
 #define zda_slist_header_init zda_slist_sentinel_init
 
-static zda_inline int zda_slist_is_empty(zda_slist_header_t *header)
+static zda_inline int zda_slist_is_empty(zda_slist_header_t const *header)
 {
   return header->node.next == NULL;
 }
