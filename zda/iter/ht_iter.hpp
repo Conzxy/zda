@@ -33,10 +33,13 @@ struct HtIterator {
 
   friend zda_inline bool operator==(HtIterator lhs, HtIterator rhs) noexcept
   {
-    return lhs.node_ == rhs.node_;
+    return lhs.iter_.node == rhs.iter_.node;
   }
 
-  friend zda_inline bool operator!=(HtIterator lhs, HtIterator rhs) noexcept { return lhs != rhs; }
+  friend zda_inline bool operator!=(HtIterator lhs, HtIterator rhs) noexcept
+  {
+    return !(lhs == rhs);
+  }
 
  private:
   zda_ht_iter_t iter_;

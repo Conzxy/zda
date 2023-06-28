@@ -45,6 +45,16 @@ struct AvlTreeIterator {
   EntryType       *operator->() noexcept { return zda_avl_entry(node_, EntryType); }
   EntryType const *operator->() const noexcept { return zda_avl_entry(node_, EntryType); }
 
+  friend zda_inline bool operator==(AvlTreeIterator lhs, AvlTreeIterator rhs) noexcept
+  {
+    return lhs.node_ == rhs.node_;
+  }
+
+  friend zda_inline bool operator!=(AvlTreeIterator lhs, AvlTreeIterator rhs) noexcept
+  {
+    return !(lhs == rhs);
+  }
+
  private:
   zda_avl_node_t *node_;
 };

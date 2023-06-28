@@ -55,7 +55,7 @@ struct ListIterator {
 
   friend zda_inline bool operator!=(ListIterator lhs, ListIterator rhs) noexcept
   {
-    return lhs != rhs;
+    return !(lhs == rhs);
   }
 
  private:
