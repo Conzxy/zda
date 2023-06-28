@@ -39,5 +39,15 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
 * [ ] Half-Intrusive hash table(Based on BST)
 
+## C++ wrapper class
+The library also provides C++ wrapper class template to make C++ user easy to use. For example,
+```cpp
+template <typename Entry, typename Free = LibcFree>
+class List {
+  /* .. */
+};
+```
+If you want to know more, please read the code file that ends with the *.hpp extension.
+
 ## Benchmark
 TODO...
