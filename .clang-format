@@ -143,7 +143,7 @@ StatementMacros: [
   "zda_def_rb_tree_insert_malloc", "zda_def_rb_tree_insert", "zda_def_rb_tree_insert_check",
   "zda_def_rb_tree_remove", "zda_decl_rb_tree_remove", "zda_decl_rb_tree_search", "zda_def_rb_tree_search",
   "zda_def_ht_search", "zda_def_ht_insert_check", "zda_def_ht_remove", "zda_def_ht_insert_commit",
-  "zda_def_avl_tree_search", "zda_def_avl_tree_insert_check", "zda_def_avl_tree_destroy", "zda_def_avl_tree_remove"]
+  "zda_def_avl_tree_search", "zda_def_avl_tree_insert_check", "zda_def_avl_tree_destroy", "zda_def_avl_tree_remove","zda_def_avl_tree_insert_entry" ]
 
 # 自动给宏加上缩进
 # Hash is the '#' sign
