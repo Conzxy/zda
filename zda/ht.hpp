@@ -2,17 +2,22 @@
 #define _ZDA_HT_HPP__
 
 #include "zda/util/functor.hpp"
+#include "zda/util/map_functor.hpp"
 #include <zda/ht.h>
 #include <zda/iter/ht_iter.hpp>
+#include <functional>
+#include <type_traits>
 
 namespace zda {
 
 template <
     typename Entry,
     typename Key,
-    typename GetKey,
-    typename Hash,
-    typename Equal,
+    typename GetKey = GetKey<Entry, Key>,
+    typename Hash =
+        std::hash<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
+    typename Equal =
+        std::equal_to<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
     typename Free = LibcFree>
 class Ht
   : protected Hash
@@ -46,8 +51,9 @@ class Ht
 
   Entry *remove(Key key) noexcept;
 
-  iterator begin() const noexcept { return zda_ht_get_first((zda_ht_t *)&ht_); }
-  iterator end() const noexcept { return zda_ht_get_terminator((zda_ht_t *)&ht_); }
+  iterator  begin() const noexcept { return zda_ht_get_first((zda_ht_t *)&ht_); }
+  iterator  end() const noexcept { return zda_ht_get_terminator((zda_ht_t *)&ht_); }
+  zda_ht_t &rep() noexcept { return ht_; }
 
  private:
   zda_ht_t ht_;
@@ -64,8 +70,8 @@ class Ht
 
 #define _ZDA_HT_TEMPLATE_CLASS_ Ht<Entry, Key, GetKey, Hash, Equal, Free>
 #define _ZDA_HT_TO_GET_KEY_     (*((GetKey *)this))
-#define _ZDA_HT_TO_HASH_        (*((Hash)this))
-#define _ZDA_HT_TO_EQUAL_       (*((Equal)this))
+#define _ZDA_HT_TO_HASH_        (*((Hash *)this))
+#define _ZDA_HT_TO_EQUAL_       (*((Equal *)this))
 
 _ZDA_HT_TEMPLATE_LIST_
 _ZDA_HT_TEMPLATE_CLASS_::~Ht() noexcept { zda_ht_destroy_inplace(&ht_, Entry, (*((Free *)this))); }

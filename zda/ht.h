@@ -14,6 +14,8 @@ EXTERN_C_BEGIN
 typedef zda_slist_node_t   zda_ht_node_t;
 typedef zda_slist_header_t zda_ht_list_t;
 
+#define ZDA_HT_HOOK zda_ht_node_t node
+
 /* Use callback table like the virtual table in C++ is not
  * the optimal solution to provide comparing and hashing */
 typedef struct zda_ht {
@@ -36,7 +38,7 @@ typedef struct zda_ht_iter {
 #define zda_ht_entry(p_node, type)    container_of(p_node, type, node)
 #define zda_ht_iter2entry(iter, type) zda_ht_entry((iter).node, type)
 
-static zda_inline void zda_ht_init(zda_ht_t *ht)
+static zda_inline void zda_ht_init(zda_ht_t *ht) zda_noexcept
 {
   ht->cnt = ht->bkt_capa = 0;
   ht->mask               = 0;
@@ -47,16 +49,22 @@ ZDA_API int zda_ht_reserve_init(zda_ht_t *ht, size_t n);
 
 static zda_inline zda_bool zda_ht_is_empty(zda_ht_t const *ht) zda_noexcept { return ht->cnt == 0; }
 static zda_inline size_t   zda_ht_get_count(zda_ht_t const *ht) zda_noexcept { return ht->cnt; }
-static zda_inline size_t   zda_ht_bucket_count(zda_ht_t const *ht) { return ht->bkt_capa; }
+static zda_inline size_t   zda_ht_bucket_count(zda_ht_t const *ht) zda_noexcept
+{
+  return ht->bkt_capa;
+}
 
-static zda_inline int _zda_ht_need_rehash(zda_ht_t *ht) { return ht->bkt_capa <= ht->cnt; }
+static zda_inline int _zda_ht_need_rehash(zda_ht_t *ht) zda_noexcept
+{
+  return ht->bkt_capa <= ht->cnt;
+}
 
-static zda_inline size_t _zda_ht_get_new_capa(zda_ht_t *ht)
+static zda_inline size_t _zda_ht_get_new_capa(zda_ht_t *ht) zda_noexcept
 {
   return ht->bkt_capa == 0 ? 1 : (ht->bkt_capa << 1);
 }
 
-static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
+static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht) zda_noexcept
 {
   return (double)(ht->cnt) / ht->bkt_capa;
 }
@@ -66,17 +74,17 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
 /* To make the hash and compare callback can be inlined intead of a ordinary function call,
  * users should use the following to generate codes or function definitions to achieve it. */
 
-#define _zda_ht_rehash_capa(_ht, type, get_key, hash, new_capa)                                    \
+#define _zda_ht_rehash_capa(__ht, type, get_key, hash, new_capa)                                   \
   do {                                                                                             \
     zda_ht_list_t *new_tb = (zda_ht_list_t *)malloc(sizeof(zda_ht_list_t) * new_capa);             \
     for (size_t i = 0; i < new_capa; ++i) {                                                        \
       zda_slist_header_init(&new_tb[i]);                                                           \
     }                                                                                              \
-    _ht->mask = new_capa - 1;                                                                      \
-    if (_ht->tb) {                                                                                 \
-      for (size_t i = 0; i < _ht->bkt_capa; ++i) {                                                 \
-        for (zda_ht_node_t *pos = _ht->tb[i].node.next; pos != NULL;) {                            \
-          const size_t   new_idx         = _ht->mask & hash(get_key(zda_ht_entry(pos, type)));     \
+    __ht->mask = new_capa - 1;                                                                     \
+    if (__ht->tb) {                                                                                \
+      for (size_t i = 0; i < __ht->bkt_capa; ++i) {                                                \
+        for (zda_ht_node_t *pos = __ht->tb[i].node.next; pos != NULL;) {                           \
+          const size_t   new_idx         = __ht->mask & hash(get_key(zda_ht_entry(pos, type)));    \
           zda_ht_node_t *steal_node_next = pos->next;                                              \
           pos->next                      = new_tb[new_idx].node.next;                              \
           new_tb[new_idx].node.next      = pos;                                                    \
@@ -84,15 +92,15 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
         }                                                                                          \
       }                                                                                            \
     }                                                                                              \
-    _ht->bkt_capa = new_capa;                                                                      \
-    free(_ht->tb);                                                                                 \
-    _ht->tb = new_tb;                                                                              \
+    __ht->bkt_capa = new_capa;                                                                     \
+    free(__ht->tb);                                                                                \
+    __ht->tb = new_tb;                                                                             \
   } while (0)
 
-#define _zda_ht_rehash(_ht, type, get_key, hash)                                                   \
+#define _zda_ht_rehash(__ht, type, get_key, hash)                                                  \
   do {                                                                                             \
-    const size_t new_capa = _zda_ht_get_new_capa(_ht);                                             \
-    _zda_ht_rehash_capa(_ht, type, get_key, hash, new_capa);                                       \
+    const size_t new_capa = _zda_ht_get_new_capa(__ht);                                            \
+    _zda_ht_rehash_capa(__ht, type, get_key, hash, new_capa);                                      \
   } while (0)
 
 /* User can use these *_inplace function-like macros to execute opertions,
@@ -126,12 +134,13 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
 #define zda_ht_insert_check_inplace(ht, key, type, get_key, hash, cmp, commit_ctx, p_dup)          \
   do {                                                                                             \
     /* If user pass `&ht` to `ht` paramenter, I don't want to use temporary object */              \
-    zda_ht_t *_ht = ht;                                                                            \
-    if (_zda_ht_need_rehash(_ht)) {                                                                \
-      _zda_ht_rehash(_ht, type, get_key, hash);                                                    \
+    zda_ht_t *__ht = ht;                                                                           \
+    p_dup          = NULL;                                                                         \
+    if (_zda_ht_need_rehash(__ht)) {                                                               \
+      _zda_ht_rehash(__ht, type, get_key, hash);                                                   \
     }                                                                                              \
-    const size_t   key_idx     = hash(key) & _ht->mask;                                            \
-    zda_ht_list_t *insert_list = &_ht->tb[key_idx];                                                \
+    const size_t   key_idx     = hash(key) & __ht->mask;                                           \
+    zda_ht_list_t *insert_list = &__ht->tb[key_idx];                                               \
     for (zda_ht_node_t *pos = insert_list->node.next; pos != NULL; pos = pos->next) {              \
       type *entry = zda_ht_entry(pos, type);                                                       \
       if (cmp(get_key(entry), key)) {                                                              \
@@ -141,16 +150,16 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
     }                                                                                              \
     if (p_dup) break;                                                                              \
     (commit_ctx).bkt_idx = key_idx;                                                                \
-    _ht->cnt++;                                                                                    \
+    __ht->cnt++;                                                                                   \
   } while (0)
 
 ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_ht_node_t *node);
 
 #define zda_ht_insert_commit_inplace(ht, commit_ctx, _node)                                        \
   do {                                                                                             \
-    zda_ht_t *_ht = ht;                                                                            \
-    assert(!zda_ht_is_empty(_ht));                                                                 \
-    zda_ht_list_t *p_insert_list = &_ht->tb[(commit_ctx).bkt_idx];                                 \
+    zda_ht_t *__ht = ht;                                                                           \
+    assert(!zda_ht_is_empty(__ht));                                                                \
+    zda_ht_list_t *p_insert_list = &__ht->tb[(commit_ctx).bkt_idx];                                \
     (_node)->next                = p_insert_list->node.next;                                       \
     p_insert_list->node.next     = (_node);                                                        \
   } while (0)
@@ -178,13 +187,13 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
 
 #define zda_ht_search_inplace(ht, key, type, get_key, hash, cmp, result_entry)                     \
   do {                                                                                             \
-    zda_ht_t *_ht = ht;                                                                            \
-    result_entry  = NULL;                                                                          \
-    if (zda_ht_is_empty(_ht)) {                                                                    \
+    zda_ht_t *__ht = ht;                                                                           \
+    result_entry   = NULL;                                                                         \
+    if (zda_ht_is_empty(__ht)) {                                                                   \
       break;                                                                                       \
     }                                                                                              \
-    size_t         bkt_idx = _zda_ht_compute_bkt_idx(_ht, key, hash);                              \
-    zda_ht_list_t *hlist   = &_ht->tb[bkt_idx];                                                    \
+    size_t         bkt_idx = _zda_ht_compute_bkt_idx(__ht, key, hash);                             \
+    zda_ht_list_t *hlist   = &__ht->tb[bkt_idx];                                                   \
     zda_slist_iterate(hlist)                                                                       \
     {                                                                                              \
       type *entry = zda_ht_entry(pos, type);                                                       \
@@ -197,19 +206,19 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
 
 #define zda_ht_remove_inplace(ht, key, type, get_key, hash, cmp, o_entry)                          \
   do {                                                                                             \
-    zda_ht_t *_ht = ht;                                                                            \
-    o_entry       = NULL;                                                                          \
-    if (zda_ht_is_empty(_ht)) {                                                                    \
+    zda_ht_t *__ht = ht;                                                                           \
+    o_entry        = NULL;                                                                         \
+    if (zda_ht_is_empty(__ht)) {                                                                   \
       break;                                                                                       \
     }                                                                                              \
-    size_t         bkt_idx = _zda_ht_compute_bkt_idx(_ht, key, hash);                              \
-    zda_ht_list_t *hlist   = &(_ht->tb[bkt_idx]);                                                  \
+    size_t         bkt_idx = _zda_ht_compute_bkt_idx(__ht, key, hash);                             \
+    zda_ht_list_t *hlist   = &(__ht->tb[bkt_idx]);                                                 \
     for (zda_ht_node_t *pos = &hlist->node; pos->next != NULL;) {                                  \
       type *cur_entry = zda_ht_entry(pos->next, type);                                             \
       if (cmp(get_key(cur_entry), key)) {                                                          \
         o_entry   = cur_entry;                                                                     \
         pos->next = o_entry->node.next;                                                            \
-        _ht->cnt--;                                                                                \
+        __ht->cnt--;                                                                               \
         break;                                                                                     \
       }                                                                                            \
       pos = pos->next;                                                                             \
@@ -218,9 +227,9 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
 
 #define zda_ht_destroy_inplace(ht, entry_type, free_cb)                                            \
   do {                                                                                             \
-    zda_ht_t *_ht = ht;                                                                            \
-    for (size_t i = 0; i < _ht->bkt_capa; ++i) {                                                   \
-      zda_ht_list_t *hlist = &_ht->tb[i];                                                          \
+    zda_ht_t *__ht = ht;                                                                           \
+    for (size_t i = 0; i < __ht->bkt_capa; ++i) {                                                  \
+      zda_ht_list_t *hlist = &__ht->tb[i];                                                         \
       zda_ht_node_t *first = hlist->node.next;                                                     \
       while (first) {                                                                              \
         hlist->node.next = first->next;                                                            \
@@ -228,8 +237,8 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
         first = hlist->node.next;                                                                  \
       }                                                                                            \
     }                                                                                              \
-    free(_ht->tb);                                                                                 \
-    _ht->mask = _ht->bkt_capa = _ht->cnt = 0;                                                      \
+    free(__ht->tb);                                                                                \
+    __ht->mask = __ht->bkt_capa = __ht->cnt = 0;                                                   \
   } while (0)
 
 /**********************************/
@@ -268,7 +277,7 @@ ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *n
 /* Wrapper macro */
 /************************************/
 #define zda_decl_ht_insert_check(func_name, key_type, entry_type)                                  \
-  entry_type *func_name(zda_ht_t *ht, key_type key, zda_ht_commit_ctx_t *p_ctx)
+  entry_type *func_name(zda_ht_t *ht, key_type key, zda_ht_commit_ctx_t *p_ctx) zda_noexcept
 
 #define zda_def_ht_insert_check(func_name, key_type, entry_type, get_key, hash, cmp)               \
   zda_decl_ht_insert_check(func_name, key_type, entry_type)                                        \
@@ -289,7 +298,7 @@ ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *n
   }
 
 #define zda_decl_ht_search(func_name, key_type, entry_type)                                        \
-  entry_type *func_name(zda_ht_t *ht, key_type key)
+  entry_type *func_name(zda_ht_t *ht, key_type key) zda_noexcept
 
 #define zda_def_ht_search(func_name, key_type, entry_type, get_key, hash, cmp)                     \
   zda_decl_ht_search(func_name, key_type, entry_type)                                              \
@@ -300,13 +309,13 @@ ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *n
   }
 
 #define zda_decl_ht_remove(func_name, key_type, entry_type)                                        \
-  entry_type *func_name(zda_ht_t *ht, key_type key)
+  entry_type *func_name(zda_ht_t *ht, key_type key) zda_noexcept
 
 #define zda_def_ht_remove(func_name, key_type, entry_type, get_key, hash, cmp)                     \
   zda_decl_ht_remove(func_name, key_type, entry_type)                                              \
   {                                                                                                \
     entry_type *result;                                                                            \
-    zda_ht_remove_replace(ht, key, entry_type, get_key, hash, cmp, result);                        \
+    zda_ht_remove_inplace(ht, key, entry_type, get_key, hash, cmp, result);                        \
     return result;                                                                                 \
   }
 
