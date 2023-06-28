@@ -14,11 +14,9 @@ template <
     typename Entry,
     typename Key,
     typename GetKey = GetKey<Entry, Key>,
-    typename Hash =
-        std::hash<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
-    typename Equal =
-        std::equal_to<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
-    typename Free = LibcFree<Entry>>
+    typename Hash   = std::hash<Key>,
+    typename Equal  = std::equal_to<Key>,
+    typename Free   = LibcFree<Entry>>
 class Ht
   : protected Hash
   , protected Equal
@@ -33,6 +31,10 @@ class Ht
   using free_type    = Free;
   using iterator     = HtIterator<entry_type>;
 
+  /* Unlike STL, optimize the parameter type of insert/search/remove when key type is trivial type,
+   * pass them as value instead of reference to avoid indirect access(and cause cache miss). */
+  using AKey = typename std::conditional<std::is_trivial<Key>::value, Key, Key const &>::type;
+
   Ht() noexcept { zda_ht_init(&ht_); }
   ~Ht() noexcept;
 
@@ -44,12 +46,12 @@ class Ht
   double load_factor() const noexcept { return zda_ht_get_load_factor(&ht_); }
 
   Entry *insert_entry(Entry *entry);
-  Entry *insert_check(Key key, zda_ht_commit_ctx_t *p_ctx) noexcept;
+  Entry *insert_check(AKey key, zda_ht_commit_ctx_t *p_ctx) noexcept;
   void   insert_commit(zda_ht_commit_ctx_t const *p_ctx, zda_ht_node_t *node);
 
-  Entry *search(Key key) noexcept;
+  Entry *search(AKey key) noexcept;
 
-  Entry *remove(Key key) noexcept;
+  Entry *remove(AKey key) noexcept;
 
   iterator  begin() const noexcept { return zda_ht_get_first((zda_ht_t *)&ht_); }
   iterator  end() const noexcept { return zda_ht_get_terminator((zda_ht_t *)&ht_); }
@@ -93,7 +95,7 @@ Entry *_ZDA_HT_TEMPLATE_CLASS_::insert_entry(Entry *entry)
 }
 
 _ZDA_HT_TEMPLATE_LIST_
-Entry *_ZDA_HT_TEMPLATE_CLASS_::insert_check(Key key, zda_ht_commit_ctx_t *p_ctx) noexcept
+Entry *_ZDA_HT_TEMPLATE_CLASS_::insert_check(AKey key, zda_ht_commit_ctx_t *p_ctx) noexcept
 {
   Entry *p_dup;
   zda_ht_insert_check_inplace(
@@ -116,7 +118,7 @@ void _ZDA_HT_TEMPLATE_CLASS_::insert_commit(zda_ht_commit_ctx_t const *p_ctx, zd
 }
 
 _ZDA_HT_TEMPLATE_LIST_
-Entry *_ZDA_HT_TEMPLATE_CLASS_::search(Key key) noexcept
+Entry *_ZDA_HT_TEMPLATE_CLASS_::search(AKey key) noexcept
 {
   Entry *ret;
   zda_ht_search_inplace(
@@ -132,7 +134,7 @@ Entry *_ZDA_HT_TEMPLATE_CLASS_::search(Key key) noexcept
 }
 
 _ZDA_HT_TEMPLATE_LIST_
-Entry *_ZDA_HT_TEMPLATE_CLASS_::remove(Key key) noexcept
+Entry *_ZDA_HT_TEMPLATE_CLASS_::remove(AKey key) noexcept
 {
   Entry *ret;
   zda_ht_remove_inplace(

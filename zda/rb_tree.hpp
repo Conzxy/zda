@@ -26,17 +26,21 @@ class RbTree
   using get_key    = GetKey;
   using rep_type   = zda_rb_tree_t;
 
+  /* Unlike STL, optimize the parameter type of insert/search/remove when key type is trivial type,
+   * pass them as value instead of reference to avoid indirect access(and cause cache miss). */
+  using AKey = typename std::conditional<std::is_trivial<Key>::value, Key, Key const &>::type;
+
   RbTree() noexcept;
   ~RbTree() noexcept;
 
   EntryType *insert_entry(EntryType *entry) noexcept;
-  EntryType *insert_check(Key const &key, zda_rb_commit_ctx_t *p_cmt_ctx) noexcept;
+  EntryType *insert_check(AKey key, zda_rb_commit_ctx_t *p_cmt_ctx) noexcept;
   void       insert_commit(zda_rb_commit_ctx_t *p_cmt_ctx, zda_rb_node_t *node) noexcept;
 
-  EntryType *search(Key const &key) noexcept;
+  EntryType *search(AKey key) noexcept;
 
   void       remove_node(zda_rb_node_t *node) noexcept;
-  EntryType *remove(Key const &key) noexcept;
+  EntryType *remove(AKey key) noexcept;
 
   iterator  begin() const noexcept { return zda_rb_tree_first((rep_type *)&tree_); }
   iterator  last() const noexcept { return zda_rb_tree_last((rep_type *)&tree_); }
@@ -87,7 +91,7 @@ zda_inline EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_entry(EntryType *ent
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
 EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_check(
-    Key const           &key,
+    AKey                 key,
     zda_rb_commit_ctx_t *p_cmt_ctx
 ) noexcept
 {
@@ -114,7 +118,7 @@ void _ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_commit(
 }
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
-EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::search(Key const &key) noexcept
+EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::search(AKey key) noexcept
 {
   EntryType *ret;
   zda_rb_tree_search_inplace(
@@ -135,7 +139,7 @@ void _ZDA_AVL_TREE_TEMPLATE_CLASS_::remove_node(zda_rb_node_t *node) noexcept
 }
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
-EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::remove(Key const &key) noexcept
+EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::remove(AKey key) noexcept
 {
   EntryType *ret;
   zda_rb_tree_remove_inplace(

@@ -26,17 +26,19 @@ class AvlTree
   using get_key    = GetKey;
   using rep_type   = zda_avl_tree_t;
 
+  using AKey = typename std::conditional<std::is_trivial<Key>::value, Key, Key const &>::type;
+
   AvlTree() noexcept;
   ~AvlTree() noexcept;
 
   EntryType *insert_entry(EntryType *entry) noexcept;
-  EntryType *insert_check(Key const &key, zda_avl_commit_ctx_t *p_cmt_ctx) noexcept;
+  EntryType *insert_check(AKey key, zda_avl_commit_ctx_t *p_cmt_ctx) noexcept;
   void       insert_commit(zda_avl_commit_ctx_t *p_cmt_ctx, zda_avl_node_t *node) noexcept;
 
-  EntryType *search(Key const &key) noexcept;
+  EntryType *search(AKey key) noexcept;
 
   void       remove_node(zda_avl_node_t *node) noexcept;
-  EntryType *remove(Key const &key) noexcept;
+  EntryType *remove(AKey key) noexcept;
 
   iterator  begin() const noexcept { return zda_avl_tree_get_first((rep_type *)&tree_); }
   iterator  last() const noexcept { return zda_avl_tree_get_last((rep_type *)&tree_); }
@@ -86,7 +88,7 @@ zda_inline EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_entry(EntryType *ent
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
 EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_check(
-    Key const            &key,
+    AKey                  key,
     zda_avl_commit_ctx_t *p_cmt_ctx
 ) noexcept
 {
@@ -113,7 +115,7 @@ void _ZDA_AVL_TREE_TEMPLATE_CLASS_::insert_commit(
 }
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
-EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::search(Key const &key) noexcept
+EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::search(AKey key) noexcept
 {
   EntryType *ret;
   zda_avl_tree_search_inplace(
@@ -134,7 +136,7 @@ void _ZDA_AVL_TREE_TEMPLATE_CLASS_::remove_node(zda_avl_node_t *node) noexcept
 }
 
 _ZDA_AVL_TREE_TEMPLATE_LIST_
-EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::remove(Key const &key) noexcept
+EntryType *_ZDA_AVL_TREE_TEMPLATE_CLASS_::remove(AKey key) noexcept
 {
   EntryType *ret;
   zda_avl_tree_remove_inplace(
