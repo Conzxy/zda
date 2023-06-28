@@ -91,6 +91,8 @@ typedef struct zda_rb_header {
   zda_rb_node_t node;
 } zda_rb_header_t;
 
+typedef zda_rb_header_t zda_rb_tree_t;
+
 #define ZDA_RB_HEADER_TO_NODE(header) ((zda_rb_node_t *)header)
 #define ZDA_RB_HEADER_NODE            ((zda_rb_node_t *)header)
 
@@ -151,6 +153,7 @@ static zda_inline zda_rb_node_t **zda_rb_tree_get_p_root(zda_rb_header_t *header
  * @param header Must be uninitialized
  */
 ZDA_API void zda_rb_header_init(zda_rb_header_t *header);
+#define zda_rb_tree_init zda_rb_header_init
 
 /**
  * @brief Initialize the node of tree
@@ -342,12 +345,12 @@ ZDA_API zda_rb_node_t *zda_rb_tree_search(
     zda_rb_cmp_t     cmp
 );
 
-#define zda_rb_tree_search_inplace(header, key, type, member, cmp_cb, p_result)                    \
+#define zda_rb_tree_search_inplace(header, key, type, get_key, cmp_cb, p_result)                   \
   do {                                                                                             \
     p_result            = ZDA_NULL;                                                                \
     zda_rb_node_t *root = zda_rb_tree_get_root(header);                                            \
     while (!zda_rb_node_is_nil(header, root)) {                                                    \
-      int res = cmp_cb(zda_rb_entry(root, type)->member, key);                                     \
+      int res = cmp_cb(get_key(zda_rb_entry(root, type)), key);                                    \
       if (res < 0) {                                                                               \
         root = root->right;                                                                        \
       } else if (res > 0) {                                                                        \
@@ -362,11 +365,11 @@ ZDA_API zda_rb_node_t *zda_rb_tree_search(
 #define zda_decl_rb_tree_search(func_name, key_type, type)                                         \
   type *func_name(zda_rb_header_t *header, key_type key)
 
-#define zda_def_rb_tree_search(func_name, key_type, type, member, cmp)                             \
+#define zda_def_rb_tree_search(func_name, key_type, type, get_key, cmp)                            \
   zda_decl_rb_tree_search(func_name, key_type, type)                                               \
   {                                                                                                \
     type *result;                                                                                  \
-    zda_rb_tree_search_inplace(header, key, type, member, cmp, result);                            \
+    zda_rb_tree_search_inplace(header, key, type, get_key, cmp, result);                           \
     return result;                                                                                 \
   }
 
@@ -495,14 +498,14 @@ typedef struct zda_rb_commit_ctx {
  * @brief
  *
  */
-#define zda_rb_tree_insert_check_inplace(header, key, type, member, cmp_cb, commit_ctx, p_dup)     \
+#define zda_rb_tree_insert_check_inplace(header, key, type, get_key, cmp_cb, commit_ctx, p_dup)    \
   do {                                                                                             \
     zda_rb_header_t *__header     = header;                                                        \
     zda_rb_node_t  **p_slot       = zda_rb_tree_get_p_root(__header);                              \
     zda_rb_node_t   *track_parent = (*p_slot)->parent;                                             \
     p_dup                         = NULL;                                                          \
     for (; !zda_rb_node_is_nil(__header, *p_slot);) {                                              \
-      int res = cmp_cb(zda_rb_entry(*p_slot, type)->member, key);                                  \
+      int res = cmp_cb(get_key(zda_rb_entry(*p_slot, type)), key);                                 \
       if (res < 0) {                                                                               \
         track_parent = *p_slot;                                                                    \
         p_slot       = &(*p_slot)->right;                                                          \
@@ -522,11 +525,11 @@ typedef struct zda_rb_commit_ctx {
 #define zda_decl_rb_tree_insert_check(func_name, key_type, type)                                   \
   type *func_name(zda_rb_header_t *header, key_type key, zda_rb_commit_ctx_t *p_ctx)
 
-#define zda_def_rb_tree_insert_check(func_name, key_type, type, member, cmp)                       \
+#define zda_def_rb_tree_insert_check(func_name, key_type, type, get_key, cmp)                      \
   zda_decl_rb_tree_insert_check(func_name, key_type, type)                                         \
   {                                                                                                \
     type *p_dup;                                                                                   \
-    zda_rb_tree_insert_check_inplace(header, key, type, member, cmp, *p_ctx, p_dup);               \
+    zda_rb_tree_insert_check_inplace(header, key, type, get_key, cmp, *p_ctx, p_dup);              \
     return p_dup;                                                                                  \
   }
 
@@ -539,6 +542,20 @@ static zda_inline void zda_rb_tree_insert_commit(
   *p_ctx->pp_slot = new_node;
   zda_rb_node_after_insert(header, new_node, p_ctx->p_parent);
 }
+
+#define zda_decl_rb_tree_insert_entry(func_name, type)                                             \
+  type *func_name(zda_rb_tree_t *tree, type *entry)
+
+#define zda_def_rb_tree_insert_entry(func_name, type, get_key, cmp_cb)                             \
+  zda_decl_rb_tree_insert_entry(func_name, type)                                                   \
+  {                                                                                                \
+    zda_rb_commit_ctx_t cmt_ctx;                                                                   \
+    type               *p_dup;                                                                     \
+    zda_rb_tree_insert_check_inplace(tree, get_key(entry), type, get_key, cmp_cb, cmt_ctx, p_dup); \
+    if (p_dup) return p_dup;                                                                       \
+    zda_rb_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                       \
+    return entry;                                                                                  \
+  }
 
 /**********************************/
 /* Remove APIs */
@@ -568,9 +585,9 @@ ZDA_API zda_rb_node_t *zda_rb_tree_remove(
     zda_rb_cmp_t     cmp
 );
 
-#define zda_rb_tree_remove_inplace(header, key, type, member, cmp_cb, p_entry)                     \
+#define zda_rb_tree_remove_inplace(header, key, type, get_key, cmp_cb, p_entry)                    \
   do {                                                                                             \
-    zda_rb_tree_search_inplace(header, key, type, member, cmp_cb, p_entry);                        \
+    zda_rb_tree_search_inplace(header, key, type, get_key, cmp_cb, p_entry);                       \
     if (p_entry) {                                                                                 \
       zda_rb_tree_remove_node(header, &p_entry->node);                                             \
     }                                                                                              \
@@ -579,11 +596,11 @@ ZDA_API zda_rb_node_t *zda_rb_tree_remove(
 #define zda_decl_rb_tree_remove(func_name, key_type, type)                                         \
   type *func_name(zda_rb_header_t *header, key_type key)
 
-#define zda_def_rb_tree_remove(func_name, key_type, type, member, cmp_cb)                          \
+#define zda_def_rb_tree_remove(func_name, key_type, type, get_key, cmp_cb)                         \
   zda_decl_rb_tree_remove(func_name, key_type, type)                                               \
   {                                                                                                \
     type *ret;                                                                                     \
-    zda_rb_tree_remove_inplace(header, key, type, member, cmp_cb, ret);                            \
+    zda_rb_tree_remove_inplace(header, key, type, get_key, cmp_cb, ret);                           \
     return ret;                                                                                    \
   }
 
@@ -614,13 +631,13 @@ ZDA_API void zda_rb_tree_print_tree(zda_rb_header_t *header, int(print_cb)(void 
 /* Inplace version macro */
 /********************************************/
 
-#define zda_rb_tree_insert_inplace(header, key, type, member, cmp_cb, result, p_dup)               \
+#define zda_rb_tree_insert_inplace(header, key, type, get_key, cmp_cb, result, p_dup)              \
   do {                                                                                             \
     zda_rb_node_t **p_slot       = zda_rb_tree_get_p_root(header);                                 \
     zda_rb_node_t  *track_parent = (*p_slot)->parent;                                              \
     result                       = 1;                                                              \
     for (; !zda_rb_node_is_nil(header, *p_slot);) {                                                \
-      int res = cmp_cb(zda_rb_entry(*p_slot, type)->member, key);                                  \
+      int res = cmp_cb(get_key(zda_rb_entry(*p_slot, type)), key);                                 \
       if (res < 0) {                                                                               \
         track_parent = *p_slot;                                                                    \
         p_slot       = &(*p_slot)->right;                                                          \
