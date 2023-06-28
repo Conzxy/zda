@@ -10,7 +10,7 @@
 namespace zstl {
 
 template <typename II, typename OI>
-OI UninitializedMoveIfNoexcept(II first, II last, OI output)
+inline OI UninitializedMoveIfNoexcept(II first, II last, OI output)
 {
   return std::uninitialized_copy(
       MAKE_MOVE_ITERATOR_IF_NOEXCEPT(first),
@@ -23,7 +23,7 @@ OI UninitializedMoveIfNoexcept(II first, II last, OI output)
 // std::uninitialized_default_construct()
 // NOTE: it return void
 template <typename II, typename = zstl::enable_if_t<!std::is_trivial<iter_value_t<II>>::value>>
-II UninitializedDefaultConstruct(II first, II last)
+inline II UninitializedDefaultConstruct(II first, II last)
 {
   using ValueType = iter_value_t<II>;
 
@@ -45,7 +45,7 @@ II UninitializedDefaultConstruct(II first, II last)
 }
 
 template <typename II, zstl::enable_if_t<std::is_trivial<iter_value_t<II>>::value, int> = 0>
-II UninitializedDefaultConstruct(II first, II last)
+inline II UninitializedDefaultConstruct(II first, II last)
 {
   (void)first;
   (void)last;
@@ -54,7 +54,7 @@ II UninitializedDefaultConstruct(II first, II last)
 }
 
 template <typename II, typename = zstl::enable_if_t<!std::is_trivial<iter_value_t<II>>::value>>
-void DestroyRange(II first, II last)
+inline void DestroyRange(II first, II last)
 {
   using ValueType = iter_value_t<II>;
   for (; first != last; ++first) {
@@ -63,7 +63,7 @@ void DestroyRange(II first, II last)
 }
 
 template <typename II, zstl::enable_if_t<std::is_trivial<iter_value_t<II>>::value, int> = 0>
-void DestroyRange(II first, II last)
+inline void DestroyRange(II first, II last) noexcept
 {
   (void)first;
   (void)last;

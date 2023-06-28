@@ -18,7 +18,7 @@ template <
         std::hash<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
     typename Equal =
         std::equal_to<typename std::remove_const<typename std::remove_reference<Key>::type>::type>,
-    typename Free = LibcFree>
+    typename Free = LibcFree<Entry>>
 class Ht
   : protected Hash
   , protected Equal

@@ -3,15 +3,21 @@
 
 #include <cstdlib>
 #include "zda/util/macro.h"
+#include "zda/zstl/destroy.hpp"
 
 namespace zda {
 
+template <typename Entry>
 struct LibcFree {
-  zda_inline void operator()(void *e) zda_noexcept { free(e); }
+  zda_inline void operator()(Entry *e) noexcept
+  {
+    zstl::Destroy(e);
+    free(e);
+  }
 };
 
 struct EmptyFree {
-  zda_inline void operator()(void *) zda_noexcept {}
+  zda_inline void operator()(void *) noexcept {}
 };
 
 template <typename V, typename NodeType>

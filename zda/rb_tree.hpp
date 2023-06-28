@@ -14,7 +14,7 @@ template <
     typename EntryType,
     typename GetKey  = zda::GetKey<EntryType, Key>,
     typename Compare = Comparator<Key>,
-    typename Free    = LibcFree>
+    typename Free    = LibcFree<EntryType>>
 class RbTree
   : protected Compare
   , protected Free

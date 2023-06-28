@@ -8,7 +8,7 @@
 
 namespace zda {
 
-template <typename Entry, typename Free = LibcFree>
+template <typename Entry, typename Free = LibcFree<Entry>>
 class Slist : protected Free {
  public:
   using iterator   = SlistIterator<Entry>;

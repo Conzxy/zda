@@ -14,7 +14,7 @@ template <
     typename EntryType,
     typename GetKey  = GetKey<EntryType, Key>,
     typename Compare = Comparator<Key>,
-    typename Free    = LibcFree>
+    typename Free    = LibcFree<EntryType>>
 class AvlTree
   : protected Compare
   , protected Free
