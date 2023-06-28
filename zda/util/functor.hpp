@@ -14,6 +14,12 @@ struct EmptyFree {
   zda_inline void operator()(void *) zda_noexcept {}
 };
 
+template <typename V, typename NodeType>
+struct VEntry {
+  V        value;
+  NodeType node;
+};
+
 } // namespace zda
 
 #endif
