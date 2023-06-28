@@ -28,10 +28,6 @@ typedef struct zda_avl_node {
   size_t               height;
 } zda_avl_node_t;
 
-typedef struct zda_avl_node_hook {
-  zda_avl_node_t node;
-} zda_avl_node_hook_t;
-
 #define ZDA_AVL_NODE_HOOK zda_avl_node_t node
 
 #define zda_avl_node_entry(p_node, type, node) container_of(p_node, type, node)

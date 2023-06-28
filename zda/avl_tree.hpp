@@ -37,9 +37,9 @@ class AvlTree
   void       remove_node(zda_avl_node_t *node) noexcept;
   EntryType *remove(Key const &key) noexcept;
 
-  iterator  begin() noexcept { return zda_avl_tree_get_first(&tree_); }
-  iterator  last() noexcept { return zda_avl_tree_get_last(&tree_); }
-  iterator  end() noexcept { return zda_avl_tree_get_terminator(&tree_); }
+  iterator  begin() const noexcept { return zda_avl_tree_get_first((rep_type *)&tree_); }
+  iterator  last() const noexcept { return zda_avl_tree_get_last((rep_type *)&tree_); }
+  iterator  end() const noexcept { return zda_avl_tree_get_terminator((rep_type *)&tree_); }
   rep_type &rep() noexcept { return tree_; }
 
  private:

@@ -91,23 +91,6 @@ static size_t _zda_ht_get_nearest_cnt(size_t n)
   return _zda_ht_bkt_cnts[l];
 }
 
-static int _zda_ht_init_bkt_cnt_tb()
-{
-  _zda_ht_bkt_cnts[0] = 0;
-  size_t cnt          = ZDA_HT_BKT_CNT_TB_SIZE;
-  for (size_t i = 1; i <= cnt; ++i) {
-    _zda_ht_bkt_cnts[i] = 1 << (i - 1);
-  }
-  return 0;
-}
-
-void zda_ht_init(zda_ht_t *ht)
-{
-  ht->cnt = ht->bkt_capa = 0;
-  ht->mask               = 0;
-  ht->tb                 = NULL;
-}
-
 int zda_ht_reserve_init(zda_ht_t *ht, size_t n)
 {
   n                       = _zda_ht_get_nearest_cnt(n);
