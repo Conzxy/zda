@@ -36,13 +36,18 @@ typedef struct zda_ht_iter {
 #define zda_ht_entry(p_node, type)    container_of(p_node, type, node)
 #define zda_ht_iter2entry(iter, type) zda_ht_entry((iter).node, type)
 
-ZDA_API void zda_ht_init(zda_ht_t *ht);
+static zda_inline void zda_ht_init(zda_ht_t *ht)
+{
+  ht->cnt = ht->bkt_capa = 0;
+  ht->mask               = 0;
+  ht->tb                 = NULL;
+}
 
 ZDA_API int zda_ht_reserve_init(zda_ht_t *ht, size_t n);
 
-static zda_inline zda_bool zda_ht_is_empty(zda_ht_t *ht) { return ht->cnt == 0; }
-static zda_inline size_t   zda_ht_get_count(zda_ht_t *ht) { return ht->cnt; }
-static zda_inline size_t   zda_ht_bucket_count(zda_ht_t *ht) { return ht->bkt_capa; }
+static zda_inline zda_bool zda_ht_is_empty(zda_ht_t const *ht) zda_noexcept { return ht->cnt == 0; }
+static zda_inline size_t   zda_ht_get_count(zda_ht_t const *ht) zda_noexcept { return ht->cnt; }
+static zda_inline size_t   zda_ht_bucket_count(zda_ht_t const *ht) { return ht->bkt_capa; }
 
 static zda_inline int _zda_ht_need_rehash(zda_ht_t *ht) { return ht->bkt_capa <= ht->cnt; }
 
@@ -51,7 +56,7 @@ static zda_inline size_t _zda_ht_get_new_capa(zda_ht_t *ht)
   return ht->bkt_capa == 0 ? 1 : (ht->bkt_capa << 1);
 }
 
-static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
+static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht)
 {
   return (double)(ht->cnt) / ht->bkt_capa;
 }
@@ -61,7 +66,7 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
 /* To make the hash and compare callback can be inlined intead of a ordinary function call,
  * users should use the following to generate codes or function definitions to achieve it. */
 
-#define _zda_ht_rehash_capa(_ht, type, member, hash, new_capa)                                     \
+#define _zda_ht_rehash_capa(_ht, type, get_key, hash, new_capa)                                    \
   do {                                                                                             \
     zda_ht_list_t *new_tb = (zda_ht_list_t *)malloc(sizeof(zda_ht_list_t) * new_capa);             \
     for (size_t i = 0; i < new_capa; ++i) {                                                        \
@@ -71,7 +76,7 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
     if (_ht->tb) {                                                                                 \
       for (size_t i = 0; i < _ht->bkt_capa; ++i) {                                                 \
         for (zda_ht_node_t *pos = _ht->tb[i].node.next; pos != NULL;) {                            \
-          const size_t   new_idx         = _ht->mask & hash(zda_ht_entry(pos, type)->member);      \
+          const size_t   new_idx         = _ht->mask & hash(get_key(zda_ht_entry(pos, type)));     \
           zda_ht_node_t *steal_node_next = pos->next;                                              \
           pos->next                      = new_tb[new_idx].node.next;                              \
           new_tb[new_idx].node.next      = pos;                                                    \
@@ -84,10 +89,10 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
     _ht->tb = new_tb;                                                                              \
   } while (0)
 
-#define _zda_ht_rehash(_ht, type, member, hash)                                                    \
+#define _zda_ht_rehash(_ht, type, get_key, hash)                                                   \
   do {                                                                                             \
     const size_t new_capa = _zda_ht_get_new_capa(_ht);                                             \
-    _zda_ht_rehash_capa(_ht, type, member, hash, new_capa);                                        \
+    _zda_ht_rehash_capa(_ht, type, get_key, hash, new_capa);                                       \
   } while (0)
 
 /* User can use these *_inplace function-like macros to execute opertions,
@@ -110,46 +115,6 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
  */
 
 /**
- * @brief Insert an allocated node to the hash table
- * The node has allocated by caller before call this function.
- * @param ht (zda_ht_t*) Hash table handle
- * @param _node (zda_ht_node_t*) The node that you want to insert
- * @param type Entry type that contains the `zda_ht_node_t` member
- * @param member Name of the member used as key
- * @param hash Hash function, signature: size_t hash(key_type key)
- * @param cmp Compare function, signature: zda_bool compare(key_type key, key_type key)
- * @param[out] result Store the insert result
- * - zda_true: The node is inserted succussfully.
- * - zda_false: There is a existed entry with same key
- * @param[out] p_dup
- * If the result is zda_false, the \p p_dup pointer to the existed entry
- * otherwise, the p_dup is undefined.
- */
-#define zda_ht_insert_node_replace(ht, _node, type, member, hash, cmp, p_dup, result)              \
-  do {                                                                                             \
-    /* If user pass `&ht` to `ht` paramenter, I don't want to use temporary object */              \
-    zda_ht_t *_ht = ht;                                                                            \
-    if (_zda_ht_need_rehash(_ht)) {                                                                \
-      _zda_ht_rehash(_ht, type, member, hash);                                                     \
-    }                                                                                              \
-    type          *entry       = zda_ht_entry(_node, type);                                        \
-    const size_t   key_idx     = hash(entry->member) & _ht->mask;                                  \
-    zda_ht_list_t *insert_list = &_ht->tb[key_idx];                                                \
-    result                     = zda_true;                                                         \
-    for (zda_ht_node_t *pos = insert_list->node.next; pos != NULL; pos = pos->next) {              \
-      type *cur_entry = zda_ht_entry(pos, type);                                                   \
-      if (cmp(cur_entry->member, entry->member)) {                                                 \
-        result = zda_false;                                                                        \
-        p_dup  = cur_entry;                                                                        \
-        break;                                                                                     \
-      }                                                                                            \
-    }                                                                                              \
-    if (!result) break;                                                                            \
-    commit_ctx.bkt_idx = key_idx;                                                                  \
-    _ht->cnt++;                                                                                    \
-  } while (0)
-
-/**
  * @brief Check whether the key has inserted
  * If the key does exists in the hash table, the insertion is failed.
  * Otherwise, the function return a commit context used for insert a node
@@ -158,24 +123,23 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t *ht)
  * It make the allocation of node is flexible and easy to handle allocation
  * error.
  */
-#define zda_ht_insert_check_inplace(ht, key, type, member, hash, cmp, commit_ctx, p_dup, result)   \
+#define zda_ht_insert_check_inplace(ht, key, type, get_key, hash, cmp, commit_ctx, p_dup)          \
   do {                                                                                             \
+    /* If user pass `&ht` to `ht` paramenter, I don't want to use temporary object */              \
     zda_ht_t *_ht = ht;                                                                            \
     if (_zda_ht_need_rehash(_ht)) {                                                                \
-      _zda_ht_rehash(_ht, type, member, hash);                                                     \
+      _zda_ht_rehash(_ht, type, get_key, hash);                                                    \
     }                                                                                              \
     const size_t   key_idx     = hash(key) & _ht->mask;                                            \
     zda_ht_list_t *insert_list = &_ht->tb[key_idx];                                                \
-    result                     = zda_true;                                                         \
     for (zda_ht_node_t *pos = insert_list->node.next; pos != NULL; pos = pos->next) {              \
       type *entry = zda_ht_entry(pos, type);                                                       \
-      if (cmp(entry->member, key)) {                                                               \
-        p_dup  = entry;                                                                            \
-        result = zda_false;                                                                        \
+      if (cmp(get_key(entry), key)) {                                                              \
+        p_dup = entry;                                                                             \
         break;                                                                                     \
       }                                                                                            \
     }                                                                                              \
-    if (!result) break;                                                                            \
+    if (p_dup) break;                                                                              \
     (commit_ctx).bkt_idx = key_idx;                                                                \
     _ht->cnt++;                                                                                    \
   } while (0)
@@ -191,7 +155,28 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
     p_insert_list->node.next     = (_node);                                                        \
   } while (0)
 
-#define zda_ht_search_inplace(ht, key, type, member, hash, cmp, result_entry)                      \
+/**
+ * @brief Insert an allocated node to the hash table
+ * The node has allocated by caller before call this function.
+ * @param ht (zda_ht_t*) Hash table handle
+ * @param entry (User-defined type*) The entry that you want to insert
+ * @param type Entry type that contains the `zda_ht_node_t` member
+ * @param get_key Get the key of entry
+ * @param hash Hash function, signature: size_t hash(key_type key)
+ * @param cmp Compare function, signature: zda_bool compare(key_type key, key_type key)
+ * @param[out] p_dup
+ * If the insertion is successful, the \p p_dup pointer to the existed entry
+ * otherwise, the p_dup is NULL
+ */
+#define zda_ht_insert_entry_inplace(ht, entry, type, get_key, hash, cmp, p_dup)                    \
+  do {                                                                                             \
+    zda_ht_commit_ctx_t commit_ctx;                                                                \
+    zda_ht_insert_check_inplace(ht, get_key(entry), type, get_key, hash, cmp, commit_ctx, p_dup);  \
+    if (p_dup) break;                                                                              \
+    zda_ht_insert_commit_inplace(ht, commit_ctx, &entry->node);                                    \
+  } while (0)
+
+#define zda_ht_search_inplace(ht, key, type, get_key, hash, cmp, result_entry)                     \
   do {                                                                                             \
     zda_ht_t *_ht = ht;                                                                            \
     result_entry  = NULL;                                                                          \
@@ -199,18 +184,18 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
       break;                                                                                       \
     }                                                                                              \
     size_t         bkt_idx = _zda_ht_compute_bkt_idx(_ht, key, hash);                              \
-    zda_ht_list_t *hlist   = &ht->tb[bkt_idx];                                                     \
+    zda_ht_list_t *hlist   = &_ht->tb[bkt_idx];                                                    \
     zda_slist_iterate(hlist)                                                                       \
     {                                                                                              \
       type *entry = zda_ht_entry(pos, type);                                                       \
-      if (cmp(entry->member, key)) {                                                               \
+      if (cmp(get_key(entry), key)) {                                                              \
         result_entry = entry;                                                                      \
         break;                                                                                     \
       }                                                                                            \
     }                                                                                              \
   } while (0)
 
-#define zda_ht_remove_replace(ht, key, type, member, hash, cmp, o_entry)                           \
+#define zda_ht_remove_inplace(ht, key, type, get_key, hash, cmp, o_entry)                          \
   do {                                                                                             \
     zda_ht_t *_ht = ht;                                                                            \
     o_entry       = NULL;                                                                          \
@@ -221,7 +206,7 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
     zda_ht_list_t *hlist   = &(_ht->tb[bkt_idx]);                                                  \
     for (zda_ht_node_t *pos = &hlist->node; pos->next != NULL;) {                                  \
       type *cur_entry = zda_ht_entry(pos->next, type);                                             \
-      if (cmp(cur_entry->member, key)) {                                                           \
+      if (cmp(get_key(cur_entry), key)) {                                                          \
         o_entry   = cur_entry;                                                                     \
         pos->next = o_entry->node.next;                                                            \
         _ht->cnt--;                                                                                \
@@ -283,15 +268,16 @@ ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *n
 /* Wrapper macro */
 /************************************/
 #define zda_decl_ht_insert_check(func_name, key_type, entry_type)                                  \
-  zda_bool func_name(zda_ht_t *ht, key_type key, zda_ht_commit_ctx_t *p_ctx, entry_type **pp_dup)
+  entry_type *func_name(zda_ht_t *ht, key_type key, zda_ht_commit_ctx_t *p_ctx)
 
-#define zda_def_ht_insert_check(func_name, key_type, entry_type, member, hash, cmp)                \
+#define zda_def_ht_insert_check(func_name, key_type, entry_type, get_key, hash, cmp)               \
   zda_decl_ht_insert_check(func_name, key_type, entry_type)                                        \
   {                                                                                                \
-    zda_bool result;                                                                               \
-    zda_ht_insert_check_inplace(ht, key, entry_type, member, hash, cmp, *p_ctx, *pp_dup, result);  \
-    return result;                                                                                 \
+    entry_type *p_dup;                                                                             \
+    zda_ht_insert_check_inplace(ht, key, entry_type, get_key, hash, cmp, *p_ctx, p_dup);           \
+    return p_dup;                                                                                  \
   }
+
 #define zda_decl_ht_insert_commit(func_name, entry_type)                                           \
   void func_name(zda_ht_t *ht, zda_ht_commit_ctx_t *cmt_ctx, entry_type *p_entry)
 
@@ -305,22 +291,22 @@ ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *n
 #define zda_decl_ht_search(func_name, key_type, entry_type)                                        \
   entry_type *func_name(zda_ht_t *ht, key_type key)
 
-#define zda_def_ht_search(func_name, key_type, entry_type, member, hash, cmp)                      \
+#define zda_def_ht_search(func_name, key_type, entry_type, get_key, hash, cmp)                     \
   zda_decl_ht_search(func_name, key_type, entry_type)                                              \
   {                                                                                                \
     entry_type *result;                                                                            \
-    zda_ht_search_inplace(ht, key, entry_type, member, hash, cmp, result);                         \
+    zda_ht_search_inplace(ht, key, entry_type, get_key, hash, cmp, result);                        \
     return result;                                                                                 \
   }
 
 #define zda_decl_ht_remove(func_name, key_type, entry_type)                                        \
   entry_type *func_name(zda_ht_t *ht, key_type key)
 
-#define zda_def_ht_remove(func_name, key_type, entry_type, member, hash, cmp)                      \
+#define zda_def_ht_remove(func_name, key_type, entry_type, get_key, hash, cmp)                     \
   zda_decl_ht_remove(func_name, key_type, entry_type)                                              \
   {                                                                                                \
     entry_type *result;                                                                            \
-    zda_ht_remove_replace(ht, key, entry_type, member, hash, cmp, result);                         \
+    zda_ht_remove_replace(ht, key, entry_type, get_key, hash, cmp, result);                        \
     return result;                                                                                 \
   }
 
