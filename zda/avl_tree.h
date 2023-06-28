@@ -206,11 +206,11 @@ ZDA_API void zda_avl_tree_insert_commit(
     zda_avl_node_t       *new_node
 ) zda_noexcept;
 
-#define zda_decl_avl_tree_insert_node(func_name, type)                                             \
-  type *func_name(zda_avl_tree_t *tree, type const *entry)
+#define zda_decl_avl_tree_insert_entry(func_name, type)                                            \
+  type *func_name(zda_avl_tree_t *tree, type *entry)
 
-#define zda_def_avl_tree_insert_node(func_name, tree, node, type, get_key, cmp_cb)                 \
-  zda_decl_avl_tree_insert_node(func_name, type)                                                   \
+#define zda_def_avl_tree_insert_entry(func_name, type, get_key, cmp_cb)                            \
+  zda_decl_avl_tree_insert_entry(func_name, type)                                                  \
   {                                                                                                \
     zda_avl_commit_ctx_t cmt_ctx;                                                                  \
     type                *p_dup;                                                                    \
