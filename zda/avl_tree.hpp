@@ -5,13 +5,14 @@
 #include <zda/iter/avl_tree_iter.hpp>
 #include <zda/util/comparator.hpp>
 #include <zda/util/functor.hpp>
+#include <zda/util/map_functor.hpp>
 
 namespace zda {
 
 template <
-    typename EntryType,
     typename Key,
-    typename GetKey,
+    typename EntryType,
+    typename GetKey  = GetKey<EntryType, Key>,
     typename Compare = Comparator<Key>,
     typename Free    = LibcFree>
 class AvlTree
@@ -47,9 +48,9 @@ class AvlTree
 };
 
 #define _ZDA_AVL_TREE_TEMPLATE_LIST_                                                               \
-  template <typename EntryType, typename Key, typename GetKey, typename Compare, typename Free>
+  template <typename Key, typename EntryType, typename GetKey, typename Compare, typename Free>
 
-#define _ZDA_AVL_TREE_TEMPLATE_CLASS_ AvlTree<EntryType, Key, GetKey, Compare, Free>
+#define _ZDA_AVL_TREE_TEMPLATE_CLASS_ AvlTree<Key, EntryType, GetKey, Compare, Free>
 
 #define _ZDA_AVL_TREE_TO_COMPARE_ (*((Compare *)this))
 #define _ZDA_AVL_TREE_TO_FREE_    (*((Free *)this))
