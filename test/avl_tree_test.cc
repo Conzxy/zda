@@ -22,7 +22,15 @@ zda_def_avl_tree_insert_check(
     int_entry_get_key,
     int_entry_cmp
 )
+zda_def_avl_tree_insert_entry(
+    avl_tree_insert_int_entry,
+    int_entry_t,
+    int_entry_get_key,
+    int_entry_cmp
+)
+
 zda_def_avl_tree_destroy(avl_tree_destroy_int_entry, int_entry_t, free)
+
 zda_def_avl_tree_search(
     avl_tree_search_int_entry,
     int,

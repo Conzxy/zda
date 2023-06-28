@@ -30,7 +30,7 @@ static int print_int_entry(zda_avl_node_t const *node)
 
 TEST(avl_test, insert)
 {
-  AvlTree<int_entry_t, int, get_key_int_entry> tree;
+  AvlTree<int, int_entry_t, get_key_int_entry> tree;
 
   for (int i = 0; i < 100; ++i) {
     int_entry_t *entry = (int_entry_t *)malloc(sizeof(int_entry_t));

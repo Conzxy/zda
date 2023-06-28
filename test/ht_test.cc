@@ -7,49 +7,63 @@ typedef struct int_entry {
   zda_ht_node_t node;
 } int_entry_t;
 
-static zda_inline size_t int_entry_hash(int i) { return i; }
+static zda_inline size_t int_entry_hash(int i) noexcept { return i; }
 
-static zda_inline zda_bool int_entry_equal(int i, int j) { return i == j; }
+static zda_inline zda_bool int_entry_equal(int i, int j) noexcept { return i == j; }
 
-static void int_entry_print(zda_ht_node_t *node)
+static void int_entry_print(zda_ht_node_t *node) noexcept
 {
   auto entry = zda_ht_entry(node, int_entry);
   printf("%d", entry->key);
 }
 
-zda_def_ht_search(ht_search_int_entry, int, int_entry_t, key, int_entry_hash, int_entry_equal)
+static zda_inline int int_entry_get_key(int_entry_t *entry) noexcept { return entry->key; }
+
+zda_def_ht_search(
+    ht_search_int_entry,
+    int,
+    int_entry_t,
+    int_entry_get_key,
+    int_entry_hash,
+    int_entry_equal
+)
 
 zda_def_ht_insert_check(
     ht_insert_check_int_entry,
     int,
     int_entry_t,
-    key,
+    int_entry_get_key,
     int_entry_hash,
     int_entry_equal
 )
 
 zda_def_ht_insert_commit(ht_insert_commit_int_entry, int_entry_t)
 
-zda_def_ht_remove(ht_remove_int_entry, int, int_entry_t, key, int_entry_hash, int_entry_equal)
+zda_def_ht_remove(
+    ht_remove_int_entry,
+    int,
+    int_entry_t,
+    int_entry_get_key,
+    int_entry_hash,
+    int_entry_equal
+)
 
 static void prepare_ht(zda_ht_t *ht, size_t n)
 {
   for (int i = 0; i < n; ++i) {
     zda_ht_commit_ctx_t commit_ctx;
-    int                 result;
     int_entry          *p_dup;
     zda_ht_insert_check_inplace(
         ht,
         i,
         int_entry_t,
-        key,
+        int_entry_get_key,
         int_entry_hash,
         int_entry_equal,
         commit_ctx,
-        p_dup,
-        result
+        p_dup
     );
-    ASSERT_TRUE(result);
+    ASSERT_TRUE(!p_dup);
     int_entry_t *entry = (int_entry_t *)malloc(sizeof(int_entry_t));
     entry->key         = i;
     zda_ht_insert_commit_inplace(ht, commit_ctx, &(entry->node));
@@ -94,7 +108,15 @@ TEST(ht_test, remove)
 
   for (int i = 0; i < 100; ++i) {
     int_entry_t *result;
-    zda_ht_remove_replace(&ht, i, int_entry_t, key, int_entry_hash, int_entry_equal, result);
+    zda_ht_remove_inplace(
+        &ht,
+        i,
+        int_entry_t,
+        int_entry_get_key,
+        int_entry_hash,
+        int_entry_equal,
+        result
+    );
     ASSERT_TRUE(result);
     free(result);
     zda_ht_print_layout(&ht, int_entry_print);
