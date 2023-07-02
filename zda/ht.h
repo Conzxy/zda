@@ -139,8 +139,8 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht) zda_noexcept
     if (_zda_ht_need_rehash(__ht)) {                                                               \
       _zda_ht_rehash(__ht, type, get_key, hash);                                                   \
     }                                                                                              \
-    const size_t   key_idx     = hash(key) & __ht->mask;                                           \
-    zda_ht_list_t *insert_list = &__ht->tb[key_idx];                                               \
+    (commit_ctx).bkt_idx       = hash(key) & __ht->mask;                                           \
+    zda_ht_list_t *insert_list = &__ht->tb[(commit_ctx).bkt_idx];                                  \
     for (zda_ht_node_t *pos = insert_list->node.next; pos != NULL; pos = pos->next) {              \
       type *entry = zda_ht_entry(pos, type);                                                       \
       if (cmp(get_key(entry), key)) {                                                              \
@@ -148,12 +148,10 @@ static zda_inline double zda_ht_get_load_factor(zda_ht_t const *ht) zda_noexcept
         break;                                                                                     \
       }                                                                                            \
     }                                                                                              \
-    if (p_dup) break;                                                                              \
-    (commit_ctx).bkt_idx = key_idx;                                                                \
-    __ht->cnt++;                                                                                   \
   } while (0)
 
-ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_ht_node_t *node);
+ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_ht_node_t *node)
+    zda_noexcept;
 
 #define zda_ht_insert_commit_inplace(ht, commit_ctx, _node)                                        \
   do {                                                                                             \
@@ -162,6 +160,7 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
     zda_ht_list_t *p_insert_list = &__ht->tb[(commit_ctx).bkt_idx];                                \
     (_node)->next                = p_insert_list->node.next;                                       \
     p_insert_list->node.next     = (_node);                                                        \
+    __ht->cnt++;                                                                                   \
   } while (0)
 
 /**
@@ -246,6 +245,7 @@ ZDA_API void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_
 /**********************************/
 
 static zda_inline zda_ht_iter_t _zda_ht_mk_iter(zda_ht_t *ht, zda_ht_node_t *node, size_t idx)
+    zda_noexcept
 {
   zda_ht_iter_t iter;
   iter.ht   = ht;
@@ -254,9 +254,12 @@ static zda_inline zda_ht_iter_t _zda_ht_mk_iter(zda_ht_t *ht, zda_ht_node_t *nod
   return iter;
 }
 
-static zda_inline int zda_ht_iter_is_terminator(zda_ht_iter_t *iter) { return iter->node == NULL; }
+static zda_inline int zda_ht_iter_is_terminator(zda_ht_iter_t *iter) zda_noexcept
+{
+  return iter->node == NULL;
+}
 
-static zda_inline zda_ht_iter_t zda_ht_get_terminator(zda_ht_t *ht)
+static zda_inline zda_ht_iter_t zda_ht_get_terminator(zda_ht_t *ht) zda_noexcept
 {
   zda_ht_iter_t iter;
   iter.ht   = ht;
@@ -264,14 +267,14 @@ static zda_inline zda_ht_iter_t zda_ht_get_terminator(zda_ht_t *ht)
   return iter;
 }
 
-ZDA_API zda_ht_iter_t zda_ht_get_first(zda_ht_t *ht);
+ZDA_API zda_ht_iter_t zda_ht_get_first(zda_ht_t *ht) zda_noexcept;
 
-ZDA_API void zda_ht_iter_inc(zda_ht_iter_t *iter);
+ZDA_API void zda_ht_iter_inc(zda_ht_iter_t *iter) zda_noexcept;
 
 /************************************/
 /* Debug APIs */
 /************************************/
-ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *node));
+ZDA_API void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *node)) zda_noexcept;
 
 /************************************/
 /* Wrapper macro */

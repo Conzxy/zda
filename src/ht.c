@@ -1,5 +1,6 @@
 // SPDX-LICENSE-IDENTIFIER: MIT
 #include "zda/ht.h"
+#include "zda/util/macro.h"
 #include <stdio.h>
 
 #define ZDA_HT_BKT_CNT_TB_SIZE (sizeof(size_t) << 3)
@@ -72,7 +73,7 @@ static size_t _zda_ht_bkt_cnts[ZDA_HT_BKT_CNT_TB_SIZE + 1] = {
     (((size_t)1) << 63),
 };
 
-static size_t _zda_ht_get_nearest_cnt(size_t n)
+static size_t _zda_ht_get_nearest_cnt(size_t n) zda_noexcept
 {
   // Just >= n
   size_t l = 0;
@@ -105,7 +106,7 @@ int zda_ht_reserve_init(zda_ht_t *ht, size_t n)
   return 1;
 }
 
-void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *node))
+void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *node)) zda_noexcept
 {
   printf("Bucket count = %zu\n", ht->bkt_capa);
   printf("Entry count = %zu\n", ht->cnt);
@@ -123,11 +124,12 @@ void zda_ht_print_layout(zda_ht_t *ht, void (*print_cb)(zda_ht_node_t *node))
 }
 
 void zda_ht_insert_commit(zda_ht_t *ht, zda_ht_commit_ctx_t *p_ctx, zda_ht_node_t *node)
+    zda_noexcept
 {
   zda_ht_insert_commit_inplace(ht, *p_ctx, node);
 }
 
-void zda_ht_iter_inc(zda_ht_iter_t *iter)
+void zda_ht_iter_inc(zda_ht_iter_t *iter) zda_noexcept
 {
   assert(!zda_ht_iter_is_terminator(iter));
   zda_ht_node_t *next = iter->node->next;
@@ -148,7 +150,7 @@ void zda_ht_iter_inc(zda_ht_iter_t *iter)
   iter->node = NULL;
 }
 
-zda_ht_iter_t zda_ht_get_first(zda_ht_t *ht)
+zda_ht_iter_t zda_ht_get_first(zda_ht_t *ht) zda_noexcept
 {
   for (size_t i = 0; i < ht->bkt_capa; ++i) {
     zda_ht_list_t  hlist = ht->tb[i];
