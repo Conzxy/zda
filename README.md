@@ -37,7 +37,9 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Dynamic array](zda/darray.hpp)  
 相关文档参考[darray.hpp](zda/darray.hpp)  
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
-* [ ] Half-Intrusive hash table(Based on BST)
+* [x] Half-Intrusive hash table(Based on avl-tree)  
+相关文档参考[avl_ht.h](zda/avl_ht.h)  
+使用方式参考[单元测试文件](test/avl_ht_test.cc)  
 
 ## C++ wrapper class
 The library also provides C++ wrapper class template to make C++ user easy to use. For example,
