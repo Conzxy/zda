@@ -206,12 +206,8 @@ ZDA_API void zda_avl_tree_insert_commit(
     zda_avl_node_t       *new_node
 ) zda_noexcept;
 
-#define zda_decl_avl_tree_insert_entry(func_name, type)                                            \
-  type *func_name(zda_avl_tree_t *tree, type *entry)
-
-#define zda_def_avl_tree_insert_entry(func_name, type, get_key, cmp_cb)                            \
-  zda_decl_avl_tree_insert_entry(func_name, type)                                                  \
-  {                                                                                                \
+#define zda_avl_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup)               \
+  do {                                                                                             \
     zda_avl_commit_ctx_t cmt_ctx;                                                                  \
     type                *p_dup;                                                                    \
     zda_avl_tree_insert_check_inplace(                                                             \
@@ -223,9 +219,19 @@ ZDA_API void zda_avl_tree_insert_commit(
         cmt_ctx,                                                                                   \
         p_dup                                                                                      \
     );                                                                                             \
-    if (p_dup) return p_dup;                                                                       \
+    if (p_dup) break;                                                                              \
     zda_avl_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                      \
-    return entry;                                                                                  \
+  } while (0)
+
+#define zda_decl_avl_tree_insert_entry(func_name, type)                                            \
+  type *func_name(zda_avl_tree_t *tree, type *entry)
+
+#define zda_def_avl_tree_insert_entry(func_name, type, get_key, cmp_cb)                            \
+  zda_decl_avl_tree_insert_entry(func_name, type)                                                  \
+  {                                                                                                \
+    type *p_dup;                                                                                   \
+    zda_avl_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup);                  \
+    return p_dup;                                                                                  \
   }
 
 /********************************/
@@ -277,7 +283,8 @@ ZDA_API void zda_avl_tree_insert_commit(
         if (parent) {                                                                              \
           if (parent->left == root) {                                                              \
             parent->left = NULL;                                                                   \
-          } else if (parent->right == root) {                                                      \
+          } else {                                                                                 \
+            assert(parent->right == root);                                                         \
             parent->right = NULL;                                                                  \
           }                                                                                        \
         }                                                                                          \
