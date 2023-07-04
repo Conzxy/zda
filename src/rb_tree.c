@@ -13,11 +13,6 @@
 /*********************************/
 /* Color APIs                    */
 /*********************************/
-static zda_inline void _zda_rb_node_set_red(zda_rb_node_t *node) { node->color = ZDA_RB_COLOR_RED; }
-static zda_inline void _zda_rb_node_set_black(zda_rb_node_t *node)
-{
-  node->color = ZDA_RB_COLOR_BLACK;
-}
 static zda_inline int _zda_rb_node_is_red(zda_rb_node_t *node)
 {
   return node->color == ZDA_RB_COLOR_RED;
@@ -137,20 +132,6 @@ static zda_inline int _zda_rb_header_is_minimum(zda_rb_header_t *header, zda_rb_
 static zda_inline int _zda_rb_header_is_maximum(zda_rb_header_t *header, zda_rb_node_t *node)
 {
   return header->node.right == node;
-}
-
-void zda_rb_header_init(zda_rb_header_t *header)
-{
-  _zda_rb_node_set_black(ZDA_RB_HEADER_NODE);
-  header->node.left = header->node.right = ZDA_RB_HEADER_TO_NODE(header);
-  header->node.parent                    = &header->node;
-}
-
-void zda_rb_node_init(zda_rb_header_t *header, zda_rb_node_t *node)
-{
-  node->parent = ZDA_NULL;
-  node->left = node->right = &header->node;
-  _zda_rb_node_set_red(node);
 }
 
 zda_rb_node_t *zda_rb_node_get_min_entry(zda_rb_header_t *header, zda_rb_node_t *root)

@@ -143,16 +143,31 @@ static zda_inline zda_rb_node_t *zda_rb_tree_get_root(zda_rb_header_t *header)
 /**
  * @brief Get the address of root of tree
  */
-static zda_inline zda_rb_node_t **zda_rb_tree_get_p_root(zda_rb_header_t *header)
+static zda_inline zda_rb_node_t **zda_rb_tree_get_p_root(zda_rb_header_t *header) zda_noexcept
 {
   return &header->node.parent;
 }
 
+static zda_inline void _zda_rb_node_set_black(zda_rb_node_t *node) zda_noexcept
+{
+  node->color = ZDA_RB_COLOR_BLACK;
+}
+
+static zda_inline void _zda_rb_node_set_red(zda_rb_node_t *node) zda_noexcept
+{
+  node->color = ZDA_RB_COLOR_RED;
+}
 /**
  * @brief Initialize the header of tree(ie. sentinel node)
  * @param header Must be uninitialized
  */
-ZDA_API void zda_rb_header_init(zda_rb_header_t *header);
+static zda_inline void zda_rb_header_init(zda_rb_header_t *header) zda_noexcept
+{
+  _zda_rb_node_set_black(ZDA_RB_HEADER_NODE);
+  header->node.left = header->node.right = ZDA_RB_HEADER_TO_NODE(header);
+  header->node.parent                    = &header->node;
+}
+
 #define zda_rb_tree_init zda_rb_header_init
 
 /**
@@ -161,7 +176,12 @@ ZDA_API void zda_rb_header_init(zda_rb_header_t *header);
  * @param header Must be initialized
  * @param node Must not be uninitialized
  */
-ZDA_API void zda_rb_node_init(zda_rb_header_t *header, zda_rb_node_t *node);
+static zda_inline void zda_rb_node_init(zda_rb_header_t *header, zda_rb_node_t *node) zda_noexcept
+{
+  node->parent = ZDA_NULL;
+  node->left = node->right = &header->node;
+  _zda_rb_node_set_red(node);
+}
 
 /**
  * @brief Check whether the tree has no entry
@@ -543,18 +563,23 @@ static zda_inline void zda_rb_tree_insert_commit(
   zda_rb_node_after_insert(header, new_node, p_ctx->p_parent);
 }
 
+#define zda_rb_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup)                \
+  do {                                                                                             \
+    zda_rb_commit_ctx_t cmt_ctx;                                                                   \
+    zda_rb_tree_insert_check_inplace(tree, get_key(entry), type, get_key, cmp_cb, cmt_ctx, p_dup); \
+    if (p_dup) break;                                                                              \
+    zda_rb_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                       \
+  } while (0)
+
 #define zda_decl_rb_tree_insert_entry(func_name, type)                                             \
   type *func_name(zda_rb_tree_t *tree, type *entry)
 
 #define zda_def_rb_tree_insert_entry(func_name, type, get_key, cmp_cb)                             \
   zda_decl_rb_tree_insert_entry(func_name, type)                                                   \
   {                                                                                                \
-    zda_rb_commit_ctx_t cmt_ctx;                                                                   \
-    type               *p_dup;                                                                     \
-    zda_rb_tree_insert_check_inplace(tree, get_key(entry), type, get_key, cmp_cb, cmt_ctx, p_dup); \
-    if (p_dup) return p_dup;                                                                       \
-    zda_rb_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                       \
-    return entry;                                                                                  \
+    type *p_dup;                                                                                   \
+    zda_rb_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup);                   \
+    return p_dup;                                                                                  \
   }
 
 /**********************************/
@@ -620,7 +645,7 @@ ZDA_API int zda_rb_tree_verify_properties(zda_rb_header_t *header);
  * |    ├── 98
  * |    |    └── 99
  * |    *── 96
- * *── 93
+ * *── 3
  *      └── 94
  * @param header
  * @param print_cb

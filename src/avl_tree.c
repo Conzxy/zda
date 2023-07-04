@@ -145,11 +145,8 @@ static zda_inline void _zda_avl_tree_fix_right_heavy(zda_avl_tree_t *tree, zda_a
   _zda_avl_node_update_height(node->parent);
 }
 
-static zda_inline void zda_avl_tree_after_insert(
-    zda_avl_tree_t *tree,
-    zda_avl_node_t *node,
-    zda_avl_node_t *parent
-) zda_noexcept
+void zda_avl_tree_after_insert(zda_avl_tree_t *tree, zda_avl_node_t *node, zda_avl_node_t *parent)
+    zda_noexcept
 {
   size_t lh, rh, h;
   int    diff;
@@ -182,14 +179,7 @@ void zda_avl_tree_insert_commit(
     zda_avl_node_t       *new_node
 ) zda_noexcept
 {
-  zda_avl_node_init(new_node);
-  *p_ctx->pp_slot = new_node;
-  if (!p_ctx->p_parent) {
-    new_node->height = 1;
-    return;
-  }
-
-  zda_avl_tree_after_insert(tree, new_node, p_ctx->p_parent);
+  zda_avl_tree_insert_commit_inplace(tree, *p_ctx, new_node);
 }
 
 /******************************/

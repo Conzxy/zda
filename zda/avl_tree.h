@@ -132,6 +132,7 @@ static zda_inline zda_avl_node_t *zda_avl_node_get_next(zda_avl_node_t *node)
   }
   return parent;
 }
+#define zda_avl_node_next zda_avl_node_get_next
 
 static zda_inline zda_avl_node_t *zda_avl_node_get_prev(zda_avl_node_t *node)
 {
@@ -145,10 +146,17 @@ static zda_inline zda_avl_node_t *zda_avl_node_get_prev(zda_avl_node_t *node)
   }
   return parent;
 }
+#define zda_avl_node_prev zda_avl_node_get_prev
 
 /**************************/
 /* Insert APIs */
 /**************************/
+
+ZDA_API void zda_avl_tree_after_insert(
+    zda_avl_tree_t *tree,
+    zda_avl_node_t *node,
+    zda_avl_node_t *parent
+) zda_noexcept;
 
 /**
  * @brief Store the context after insert check
@@ -186,7 +194,7 @@ typedef struct zda_avl_commit_ctx {
   } while (0)
 
 #define zda_decl_avl_tree_insert_check(func_name, key_type, type)                                  \
-  type *func_name(zda_avl_tree_t *tree, key_type key, zda_avl_commit_ctx_t *p_ctx)
+  type *func_name(zda_avl_tree_t *tree, key_type key, zda_avl_commit_ctx_t *p_ctx) zda_noexcept
 
 #define zda_def_avl_tree_insert_check(func_name, key_type, type, get_key, cmp)                     \
   zda_decl_avl_tree_insert_check(func_name, key_type, type)                                        \
@@ -195,6 +203,18 @@ typedef struct zda_avl_commit_ctx {
     zda_avl_tree_insert_check_inplace(tree, key, type, get_key, cmp, *p_ctx, p_dup);               \
     return p_dup;                                                                                  \
   }
+
+#define zda_avl_tree_insert_commit_inplace(tree, ctx, new_node)                                    \
+  do {                                                                                             \
+    zda_avl_node_t *__new_node = new_node;                                                         \
+    zda_avl_node_init(__new_node);                                                                 \
+    *((ctx).pp_slot) = __new_node;                                                                 \
+    if (!(ctx).p_parent) {                                                                         \
+      __new_node->height = 1;                                                                      \
+      break;                                                                                       \
+    }                                                                                              \
+    zda_avl_tree_after_insert(tree, __new_node, (ctx).p_parent);                                   \
+  } while (0)
 
 /* Because it is not necessary that pass compare function
  * and inline it.
@@ -209,7 +229,6 @@ ZDA_API void zda_avl_tree_insert_commit(
 #define zda_avl_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup)               \
   do {                                                                                             \
     zda_avl_commit_ctx_t cmt_ctx;                                                                  \
-    type                *p_dup;                                                                    \
     zda_avl_tree_insert_check_inplace(                                                             \
         tree,                                                                                      \
         get_key(entry),                                                                            \
@@ -220,14 +239,14 @@ ZDA_API void zda_avl_tree_insert_commit(
         p_dup                                                                                      \
     );                                                                                             \
     if (p_dup) break;                                                                              \
-    zda_avl_tree_insert_commit(tree, &cmt_ctx, &entry->node);                                      \
+    zda_avl_tree_insert_commit_inplace(tree, cmt_ctx, &entry->node);                               \
   } while (0)
 
 #define zda_decl_avl_tree_insert_entry(func_name, type)                                            \
-  type *func_name(zda_avl_tree_t *tree, type *entry)
+  type *func_name(zda_avl_tree_t *tree, type *entry) zda_noexcept
 
 #define zda_def_avl_tree_insert_entry(func_name, type, get_key, cmp_cb)                            \
-  zda_decl_avl_tree_insert_entry(func_name, type)                                                  \
+  zda_decl_avl_tree_insert_entry(func_name, type) zda_noexcept                                     \
   {                                                                                                \
     type *p_dup;                                                                                   \
     zda_avl_tree_insert_entry_inplace(tree, entry, type, get_key, cmp_cb, p_dup);                  \
@@ -256,7 +275,7 @@ ZDA_API void zda_avl_tree_insert_commit(
   } while (0)
 
 #define zda_decl_avl_tree_search(func_name, key_type, type)                                        \
-  type *func_name(zda_avl_tree_t *tree, key_type key)
+  type *func_name(zda_avl_tree_t *tree, key_type key) zda_noexcept
 
 #define zda_def_avl_tree_search(func_name, key_type, type, get_key, cmp)                           \
   zda_decl_avl_tree_search(func_name, key_type, type)                                              \
