@@ -2,7 +2,8 @@
 #ifndef _ZDA_LIST_H__
 #define _ZDA_LIST_H__
 
-#include "zda/rb_tree.h"
+#include <assert.h>
+#include "zda/util/export.h"
 #include "zda/util/macro.h"
 #include "zda/util/container_of.h"
 #include "zda/util/bool.h"
@@ -50,6 +51,11 @@ static zda_inline void zda_slist_sentinel_init(zda_slist_header_t *header)
 static zda_inline int zda_slist_is_empty(zda_slist_header_t const *header)
 {
   return header->node.next == NULL;
+}
+
+static zda_inline zda_bool zda_slist_is_single(zda_slist_header_t const *header) zda_noexcept
+{
+  return (header->node.next) && (header->node.next->next == NULL);
 }
 
 static zda_inline zda_slist_node_t *zda_slist_front(zda_slist_header_t *header)
