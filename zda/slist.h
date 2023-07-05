@@ -41,6 +41,11 @@ typedef int (*zda_slist_cmp_t)(zda_slist_node_t const *node, void const *key);
 #define zda_slist_node_entry(p_node, type, member) container_of(p_node, type, member)
 #define zda_slist_entry(p_node, type)              zda_slist_node_entry(p_node, type, node)
 
+static zda_inline zda_slist_node_t *zda_slist_get_header_node(zda_slist_header_t *header) zda_noexcept
+{
+  return &header->node; 
+}
+
 static zda_inline void zda_slist_sentinel_init(zda_slist_header_t *header)
 {
   header->node.next = NULL;
