@@ -334,10 +334,6 @@ static zda_inline int zda_string_view_case_compare(
             return 1;
     }
     return c1 - c2;
-#if defined(__linux__) || defined(__unix__)
-
-#else
-#endif
 }
 
 static zda_inline int zda_string_view_case_compare_char(zda_string_view_t const *view, char c)
