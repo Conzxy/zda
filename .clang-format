@@ -1,7 +1,7 @@
 #BasedOnStyle: Google
 # 成员访问符的编译
 # 0表示一个tab
-AccessModifierOffset: -1
+AccessModifierOffset: -3
 IndentGotoLabels: false
 
 # 小括号对齐，用于对齐函数参数和实参
@@ -77,6 +77,7 @@ AlwaysBreakTemplateDeclarations: Yes
 ColumnLimit: 100
 
 # 构造函数初始值列表缩进
+IndentWidth: 4
 ConstructorInitializerIndentWidth: 2
 
 # 分隔每个数据成员的初始化
