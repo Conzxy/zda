@@ -45,6 +45,10 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 其他操作参考上面提到的单链表。  
 相关文档参考[delist.h](zda/delist.h)  
 使用方式参考[单元测试文件](test/delist_test.cc)  
+* [x] [String View](zda/string_view.h)  
+对于 `C++17` 的用户来说，这个并不陌生。所谓StringView是指字符串的一个切片，或者只读视图，这个视图不允许进行写操作，而只能读取其内容。  
+在实际的编程中，我们只是利用其内容，因此有些函数，比如 `substr()` 是很容易被误用的，因为他们并没有意识到这个函数可能会造成一次动态分配，而这个动态分配是没必要的，返回一个切片是更合适的做法。  
+`StringView` 正是为了这类场景诞生的。  
 
 ## C++ wrapper class
 The library also provides C++ wrapper class template to make C++ user easy to use. For example,
