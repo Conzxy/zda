@@ -43,4 +43,12 @@
 #  define zda_noexcept
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#  define ZDA_LIKELY(cond)   __builtin_expect(!!(cond), 1)
+#  define ZDA_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#else
+#  define ZDA_LIKELY(cond)   (cond)
+#  define ZDA_UNLIKELY(cond) (cond)
+#endif
+
 #endif /* Header Guard */
