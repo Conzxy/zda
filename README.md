@@ -37,9 +37,14 @@ To some data structures, I use `C++` with tempaltes, e.g., generic dynamic array
 * [x] [Dynamic array](zda/darray.hpp)  
 相关文档参考[darray.hpp](zda/darray.hpp)  
 使用风格类似STL，亦可参考[单元测试文件](test/darray_test2.cc)  
-* [x] Half-Intrusive hash table(Based on avl-tree)  
+* [x] [Half-Intrusive hash table(Based on avl-tree)](zda/avl_ht.h)  
 相关文档参考[avl_ht.h](zda/avl_ht.h)  
 使用方式参考[单元测试文件](test/avl_ht_test.cc)  
+* [x] [Double-ended single-linked-list(Delist)](zda/delist.h)  
+`Delist`是一个支持O(1)尾插的单链表，通过它可以实现队列。注意，该数据结构并不提供尾删操作，因为单链表不可能零开销实现O(1)的尾删。  
+其他操作参考上面提到的单链表。  
+相关文档参考[delist.h](zda/delist.h)  
+使用方式参考[单元测试文件](test/delist_test.cc)  
 
 ## C++ wrapper class
 The library also provides C++ wrapper class template to make C++ user easy to use. For example,
