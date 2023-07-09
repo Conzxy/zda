@@ -33,7 +33,7 @@ struct SlistConstIterator {
     }
 
     EntryType const *operator->() noexcept { return zda_slist_entry(node_, EntryType const); }
-    EntryType const *operator->() const noexcept { return zda_slist_entry(node_, EntryType); }
+    EntryType const *operator->() const noexcept { return zda_slist_entry(node_, EntryType const); }
 
     friend zda_inline bool operator==(SlistConstIterator lhs, SlistConstIterator rhs) noexcept
     {
@@ -59,7 +59,7 @@ struct SlistIterator {
     {
     }
 
-    operator SlistConstIterator<EntryType>() zda_noexcept
+    operator SlistConstIterator<EntryType>() const zda_noexcept
     {
         return SlistConstIterator<EntryType>(node_);
     }

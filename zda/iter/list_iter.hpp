@@ -39,14 +39,14 @@ struct ListConstIterator {
         return ret;
     }
 
-    EntryType const &operator*() noexcept { return *zda_list_entry(node_, EntryType); }
+    EntryType const &operator*() noexcept { return *zda_list_entry(node_, EntryType const); }
     EntryType const &operator*() const noexcept
     {
         return *(static_cast<ListConstIterator *>(this));
     }
 
-    EntryType const *operator->() noexcept { return zda_list_entry(node_, EntryType); }
-    EntryType const *operator->() const noexcept { return zda_list_entry(node_, EntryType); }
+    EntryType const *operator->() noexcept { return zda_list_entry(node_, EntryType const); }
+    EntryType const *operator->() const noexcept { return zda_list_entry(node_, EntryType const); }
 
     zda_list_node_t       *node() noexcept { return node_; }
     zda_list_node_t const *node() const noexcept { return node_; }
@@ -73,7 +73,7 @@ struct ListIterator {
     {
     }
 
-    operator ListConstIterator<EntryType>() noexcept { return node_; }
+    operator ListConstIterator<EntryType>() const noexcept { return node_; }
 
     ListIterator &operator++() noexcept
     {

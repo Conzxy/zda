@@ -6,43 +6,88 @@
 namespace zda {
 
 template <typename EntryType>
-struct HtIterator {
-  HtIterator(zda_ht_iter const &iter) noexcept
-    : iter_(iter)
-  {
-  }
+struct HtConstIterator {
+    HtConstIterator(zda_ht_iter const &iter) noexcept
+      : iter_(iter)
+    {
+    }
 
-  HtIterator &operator++() noexcept
-  {
-    zda_ht_iter_inc(&iter_);
-    return *this;
-  }
+    HtConstIterator &operator++() noexcept
+    {
+        zda_ht_iter_inc(&iter_);
+        return *this;
+    }
 
-  HtIterator operator++(int) noexcept
-  {
-    auto ret = *this;
-    zda_ht_iter_inc(&iter_);
-    return ret;
-  }
+    HtConstIterator operator++(int) noexcept
+    {
+        auto ret = *this;
+        zda_ht_iter_inc(&iter_);
+        return ret;
+    }
 
-  EntryType       &operator*() noexcept { return *zda_ht_entry(iter_.node, EntryType); }
-  EntryType const &operator*() const noexcept { return *(static_cast<HtIterator *>(this)); }
+    EntryType const &operator*() noexcept { return *zda_ht_entry(iter_.node, EntryType const); }
+    EntryType const &operator*() const noexcept { return *(static_cast<HtConstIterator *>(this)); }
 
-  EntryType       *operator->() noexcept { return zda_ht_entry(iter_.node, EntryType); }
-  EntryType const *operator->() const noexcept { return zda_ht_entry(iter_.node, EntryType); }
+    EntryType const *operator->() noexcept { return zda_ht_entry(iter_.node, EntryType const); }
+    EntryType const *operator->() const noexcept
+    {
+        return zda_ht_entry(iter_.node, EntryType const);
+    }
 
-  friend zda_inline bool operator==(HtIterator lhs, HtIterator rhs) noexcept
-  {
-    return lhs.iter_.node == rhs.iter_.node;
-  }
+    friend zda_inline bool operator==(HtConstIterator lhs, HtConstIterator rhs) noexcept
+    {
+        return lhs.iter_.node == rhs.iter_.node;
+    }
 
-  friend zda_inline bool operator!=(HtIterator lhs, HtIterator rhs) noexcept
-  {
-    return !(lhs == rhs);
-  }
+    friend zda_inline bool operator!=(HtConstIterator lhs, HtConstIterator rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
 
  private:
-  zda_ht_iter_t iter_;
+    zda_ht_iter_t iter_;
+};
+
+template <typename EntryType>
+struct HtIterator {
+    HtIterator(zda_ht_iter const &iter) noexcept
+      : iter_(iter)
+    {
+    }
+
+    operator HtConstIterator<EntryType>() const noexcept { return iter_; }
+
+    HtIterator &operator++() noexcept
+    {
+        zda_ht_iter_inc(&iter_);
+        return *this;
+    }
+
+    HtIterator operator++(int) noexcept
+    {
+        auto ret = *this;
+        zda_ht_iter_inc(&iter_);
+        return ret;
+    }
+
+    EntryType       &operator*() noexcept { return *zda_ht_entry(iter_.node, EntryType); }
+    EntryType const &operator*() const noexcept { return *(static_cast<HtIterator *>(this)); }
+
+    EntryType       *operator->() noexcept { return zda_ht_entry(iter_.node, EntryType); }
+    EntryType const *operator->() const noexcept { return zda_ht_entry(iter_.node, EntryType); }
+
+    friend zda_inline bool operator==(HtIterator lhs, HtIterator rhs) noexcept
+    {
+        return lhs.iter_.node == rhs.iter_.node;
+    }
+
+    friend zda_inline bool operator!=(HtIterator lhs, HtIterator rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
+
+ private:
+    zda_ht_iter_t iter_;
 };
 
 } // namespace zda
