@@ -5,9 +5,11 @@ project(zda VERSION 1.0)
 
 include(cmake/cache_var.cmake)
 include(cmake/compile_flag.cmake)
+include(cmake/install.cmake)
 
 aux_source_directory(src ZDA_SRC)
 
+message(STATUS "BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 add_library(zda ${ZDA_SRC})
 if (BUILD_SHARED_LIBS)
   target_compile_definitions(zda 
@@ -25,11 +27,12 @@ target_include_directories(zda
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/kvarint>"
 )
 
-include(GNUInstallDirs)
-
 ###############################################
 # Installation
 ###############################################
+message(STATUS "Generating (${PROJECT_NAME}) install files...")
+conzxy_install(PROJECT zda NAMESPACE zda TARGETS zda)
+
 install(TARGETS zda DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY zda DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
