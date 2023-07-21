@@ -1,11 +1,10 @@
 #BasedOnStyle: Google
 # 成员访问符的编译
 # 0表示一个tab
-AccessModifierOffset: -3
-IndentGotoLabels: false
+AccessModifierOffset: -1
 
 # 小括号对齐，用于对齐函数参数和实参
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: Align
 
 # 指针和引用都是void *p形式
 PointerAlignment: Right
@@ -22,6 +21,16 @@ AlignEscapedNewlines: Right
 # int long_; //
 AlignTrailingComments: true
 
+# 实参不能填充一行，让实参都放在下一行
+# false:
+# function_call(a,
+#               b,
+#               c)
+#
+AllowAllArgumentsOnNextLine: false
+
+# 类似AllowAllArgumentsOnNextLine，但针对参数
+AllowAllParametersOfDeclarationOnNextLine: false
 
 # 1. while(true) {} 
 # 2. while(true) { continue; }
@@ -48,36 +57,25 @@ AllowShortLambdasOnASingleLine: Empty
 
 # 仅类外定义的返回类型单独一行
 # 由于单独一行如果类型名很短会很多余，因此不强制设置
-AlwaysBreakAfterReturnType: None
-PenaltyReturnTypeOnItsOwnLine: 1000
+#AlwaysBreakAfterReturnType: TopLevelDefinitions
 
 AlwaysBreakBeforeMultilineStrings: false
 
 # 设为false可以令实参要么一行塞满要么分散为每行一个实参
 # 有时候实参比较短，也会很难看
-BinPackArguments: false
-# 实参不能填充一行，让实参都放在下一行
-# false:
-# function_call(a,
-#               b,
-#               c)
-#
-
-AllowAllArgumentsOnNextLine: false
+BinPackArguments: true
 
 # 类似BinPackParameters
 # 我不打算将参数弄得很分散，因为是具名参数
-AllowAllParametersOfDeclarationOnNextLine: false
-BinPackParameters: false
+BinPackParameters: true
 
 # template<>与模板声明必须换行
 AlwaysBreakTemplateDeclarations: Yes
 
 # 80个字符一行是比较令人舒适和便于阅读的
-ColumnLimit: 100
+ColumnLimit: 80
 
 # 构造函数初始值列表缩进
-IndentWidth: 4
 ConstructorInitializerIndentWidth: 2
 
 # 分隔每个数据成员的初始化
@@ -122,31 +120,11 @@ BraceWrapping:
 
 IndentCaseLabels: true
 SortIncludes: false
-
-#########################################
-# Align Configuration
-#########################################
-AlignConsecutiveDeclarations:
-  Enabled: true
-  AcrossEmptyLines: false
-  AcrossComments: true
-
-AlignConsecutiveAssignments:
-  Enabled: true
-  AlignCompound: true
-  PadOperators: true
-  AcrossEmptyLines: false
-  AcrossComments: true
-
 AlignConsecutiveMacros: true
-StatementMacros: [
-  "zda_list_iterate", "prepare_list", 
-  "zda_def_rb_tree_insert_malloc", "zda_def_rb_tree_insert", "zda_def_rb_tree_insert_check",
-  "zda_def_rb_tree_remove", "zda_decl_rb_tree_remove", "zda_decl_rb_tree_search", "zda_def_rb_tree_search",
-  "zda_def_ht_search", "zda_def_ht_insert_check", "zda_def_ht_remove", "zda_def_ht_insert_commit",
-  "zda_def_avl_ht_search", "zda_def_avl_ht_insert_check", "zda_def_avl_ht_remove", "zda_def_avl_ht_insert_commit", "zda_def_avl_ht_insert_entry", "zda_def_avl_ht_destroy",
-  "zda_def_avl_tree_search", "zda_def_avl_tree_insert_check", "zda_def_avl_tree_destroy", "zda_def_avl_tree_remove","zda_def_avl_tree_insert_entry" ]
-
+StatementMacros: ["Str2Int", "Str2IntForOne", "AppendInt_Macro", "PrependInt_Macro", 
+  "GetReadBeginInt_Macro", "ReadInt_Macro", "Append_Macro", "Prepend_Macro", "GetReadBegin_Macro", 
+  "Read_Macro", "AdvanceRead_Macro"]
 # 自动给宏加上缩进
 # Hash is the '#' sign
 IndentPPDirectives: AfterHash
+

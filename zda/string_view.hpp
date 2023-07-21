@@ -22,6 +22,7 @@ class StringView {
 
     StringView(std::string const &str) zda_noexcept : StringView(str.data(), str.size()) {}
 
+    size_type size() const zda_noexcept { return view_.len; }
     void empty() zda_noexcept { zda_string_view_empty(&view_); }
     void is_empty() const zda_noexcept { zda_string_view_is_empty(&view_); }
 
@@ -152,6 +153,9 @@ class StringView {
         return ret;
     }
 
+    zda_string_view_t *rep() zda_noexcept { return &view_; }
+    zda_string_view_t const *rep() const zda_noexcept { return &view_; }
+    
  private:
     StringView(zda_string_view_t view) zda_noexcept : view_(view) {}
 
