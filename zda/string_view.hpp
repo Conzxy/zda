@@ -7,30 +7,44 @@
 
 namespace zda {
 
-#define DefStringViewLiteral(var_name, literal) StringView var_name(literal, sizeof(literal) - 1)
+#define DefStringViewLiteral(var_name, literal)                                \
+    StringView var_name(literal, sizeof(literal) - 1)
+#define StringViewLiteral(literal) StringView(literal, sizeof(literal) - 1)
 
 class StringView {
- public:
+   public:
     using size_type = size_t;
 
-    StringView(char const *data, size_t len) zda_noexcept
+    constexpr StringView(char const *data, size_t len) zda_noexcept
     {
         zda_string_view_init(&view_, data, len);
     }
 
-    explicit StringView(char const *c_str) zda_noexcept { zda_string_view_str_init(&view_, c_str); }
+    explicit StringView(char const *c_str) zda_noexcept
+    {
+        zda_string_view_str_init(&view_, c_str);
+    }
 
-    StringView(std::string const &str) zda_noexcept : StringView(str.data(), str.size()) {}
+    StringView(std::string const &str) zda_noexcept
+      : StringView(str.data(), str.size())
+    {
+    }
 
     size_type size() const zda_noexcept { return view_.len; }
     void empty() zda_noexcept { zda_string_view_empty(&view_); }
     void is_empty() const zda_noexcept { zda_string_view_is_empty(&view_); }
 
     char const *data() const zda_noexcept { return view_.data; }
-    char const *begin() const zda_noexcept { return zda_string_view_first(&view_); }
+    char const *begin() const zda_noexcept
+    {
+        return zda_string_view_first(&view_);
+    }
     char const *end() const zda_noexcept { return zda_string_view_end(&view_); }
 
-    char operator[](size_t i) const zda_noexcept { return zda_string_view_at(&view_, i); }
+    char operator[](size_t i) const zda_noexcept
+    {
+        return zda_string_view_at(&view_, i);
+    }
 
     StringView substr(size_t pos, size_t n) const zda_noexcept
     {
@@ -43,13 +57,25 @@ class StringView {
         return StringView(zda_string_view_substr_range(&view_, begin, end));
     }
 
-    StringView left(size_t n) const zda_noexcept { return zda_string_view_left(&view_, n); }
+    StringView left(size_t n) const zda_noexcept
+    {
+        return zda_string_view_left(&view_, n);
+    }
 
-    StringView right(size_t n) const zda_noexcept { return zda_string_view_right(&view_, n); }
+    StringView right(size_t n) const zda_noexcept
+    {
+        return zda_string_view_right(&view_, n);
+    }
 
-    void remove_prefix(size_t n) zda_noexcept { zda_string_view_remove_prefix(&view_, n); }
+    void remove_prefix(size_t n) zda_noexcept
+    {
+        zda_string_view_remove_prefix(&view_, n);
+    }
 
-    void remove_suffix(size_t n) zda_noexcept { zda_string_view_remove_suffix(&view_, n); }
+    void remove_suffix(size_t n) zda_noexcept
+    {
+        zda_string_view_remove_suffix(&view_, n);
+    }
 
     size_t find(StringView str, size_t pos = 0) const zda_noexcept
     {
@@ -61,7 +87,8 @@ class StringView {
         return zda_string_view_find_char(&view_, c, pos);
     }
 
-    size_t rfind(StringView str, size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
+    size_t rfind(StringView str,
+                 size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
     {
         return zda_string_view_rfind(&view_, str.view_, pos);
     }
@@ -76,7 +103,10 @@ class StringView {
         return zda_string_view_contains(&view_, str.view_);
     }
 
-    bool contains(char c) const zda_noexcept { return zda_string_view_contains_char(&view_, c); }
+    bool contains(char c) const zda_noexcept
+    {
+        return zda_string_view_contains_char(&view_, c);
+    }
 
     bool starts_with(StringView prefix) const zda_noexcept
     {
@@ -98,12 +128,14 @@ class StringView {
         return zda_string_view_find_first_of_char(&view_, c, pos);
     }
 
-    bool find_last_of(StringView range, size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
+    bool find_last_of(StringView range,
+                      size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
     {
         return zda_string_view_find_last_of(&view_, range.view_, pos);
     }
 
-    bool find_last_of(char c, size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
+    bool find_last_of(char c,
+                      size_t pos = ZDA_STRING_VIEW_NPOS) const zda_noexcept
     {
         return zda_string_view_find_last_of_char(&view_, c, pos);
     }
@@ -113,7 +145,10 @@ class StringView {
         return zda_string_view_compare(&view_, str.view_);
     }
 
-    int compare(char c) const zda_noexcept { return zda_string_view_compare_char(&view_, c); }
+    int compare(char c) const zda_noexcept
+    {
+        return zda_string_view_compare_char(&view_, c);
+    }
 
     int case_compare(StringView str) const zda_noexcept
     {
@@ -155,42 +190,55 @@ class StringView {
 
     zda_string_view_t *rep() zda_noexcept { return &view_; }
     zda_string_view_t const *rep() const zda_noexcept { return &view_; }
-    
- private:
+
+   private:
     StringView(zda_string_view_t view) zda_noexcept : view_(view) {}
 
     zda_string_view_t view_;
 };
 
-zda_inline bool operator<(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator<(StringView const &lhs,
+                          StringView const &rhs) zda_noexcept
 {
     return lhs.compare(rhs) < 0;
 }
 
-zda_inline bool operator>=(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator>=(StringView const &lhs,
+                           StringView const &rhs) zda_noexcept
 {
     return !(lhs < rhs);
 }
 
-zda_inline bool operator>(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator>(StringView const &lhs,
+                          StringView const &rhs) zda_noexcept
 {
     return lhs.compare(rhs) > 0;
 }
 
-zda_inline bool operator<=(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator<=(StringView const &lhs,
+                           StringView const &rhs) zda_noexcept
 {
     return !(lhs > rhs);
 }
 
-zda_inline bool operator==(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator==(StringView const &lhs,
+                           StringView const &rhs) zda_noexcept
 {
     return lhs.compare(rhs) == 0;
 }
 
-zda_inline bool operator!=(StringView const &lhs, StringView const &rhs) zda_noexcept
+zda_inline bool operator!=(StringView const &lhs,
+                           StringView const &rhs) zda_noexcept
 {
     return !(lhs == rhs);
 }
+
+namespace literal {
+constexpr StringView operator""_sv(char const *str, size_t len) zda_noexcept
+{
+    return StringView(str, len);
+}
+} // namespace literal
 
 } // namespace zda
 
