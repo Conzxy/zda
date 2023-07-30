@@ -2,6 +2,7 @@
 # 成员访问符的编译
 # 0表示一个tab
 AccessModifierOffset: -1
+IndentWidth: 4
 
 # 小括号对齐，用于对齐函数参数和实参
 AlignAfterOpenBracket: Align
