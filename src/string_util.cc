@@ -101,69 +101,14 @@ size_t zda::vstr_appendf(std::string *p_str, char const *fmt,
     va_list slist2;
     va_copy(slist2, slist);
     const auto request_len = vbuf_catf(nullptr, 0, fmt, slist2);
+    va_end(slist2);
 
     if (request_len == -1) return -1;
 
     const auto old_size = p_str->size();
     p_str->resize(request_len + old_size);
     vbuf_catf(&(*p_str)[old_size], request_len + 1, fmt, slist);
-    va_end(slist2);
     return 0;
-    /*    char const *p_c = fmt;
-        bool present_occur = false;
-        size_t ret = 0;
-
-        for (; *p_c; ++p_c) {
-            if (present_occur) {
-                switch (*p_c) {
-                    case '%':
-                        if (p_str)
-                            *p_str += '%';
-                        else
-                            ++ret;
-                        break;
-                    case 'c': {
-                        const char c = (char)va_arg(slist, int);
-                        if (p_str)
-                            *p_str += c;
-                        else
-                            ++ret;
-                    } break;
-                    case 's': {
-                        char const *s = va_arg(slist, char const *);
-                        if (p_str)
-                            p_str->append(s);
-                        else
-                            ret += strlen(s);
-                    } break;
-                    case 'v': {
-                        auto s = va_arg(slist, zda::StringView);
-                        if (p_str)
-                            p_str->append(s.data(), s.size());
-                        else
-                            ret += s.size();
-                    } break;
-                    case 'S': {
-                        std::string const *p_s = va_arg(slist, std::string
-       const
-       *); if (p_str) p_str->append(*p_s); else ret += p_s->size(); } break;
-                    default:
-                        return -1;
-                }
-                present_occur = false;
-            } else {
-                if (*p_c == '%') {
-                    present_occur = true;
-                } else {
-                    if (p_str) {
-                        *p_str += *p_c;
-                    } else {
-                        ++ret;
-                    }
-                }
-            }
-        }
-        return ret;*/
 }
 
 size_t zda::str_appendf(std::string *p_str, const char *fmt, ...) zda_noexcept
