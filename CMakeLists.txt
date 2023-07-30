@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+  cmake_minimum_required(VERSION 3.10)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(zda VERSION 1.0)
@@ -8,9 +8,12 @@ include(cmake/compile_flag.cmake)
 include(cmake/install.cmake)
 
 aux_source_directory(src ZDA_SRC)
+file(GLOB_RECURSE ZDA_INCLUDE zda/*.h zda/*.hpp)
 
+message(STATUS "Headers = ${ZDA_INCLUDE}")
+message(STATUS "Sources = ${ZDA_SRC}")
 message(STATUS "BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
-add_library(zda ${ZDA_SRC})
+add_library(zda ${ZDA_SRC} ${ZDA_INCLUDE})
 if (BUILD_SHARED_LIBS)
   target_compile_definitions(zda 
     PRIVATE ZDA_BUILD_SHARED
@@ -24,7 +27,7 @@ endif ()
 target_include_directories(zda
   PUBLIC 
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/kvarint>"
+  "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/zda>"
 )
 
 ###############################################
