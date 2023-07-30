@@ -6,6 +6,10 @@
 #include "zda/util/macro.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+EXTERN_C_BEGIN
+#endif
+
 ZDA_API zda_bool zda_string_view_to_u64(zda_string_view_t sv, int base, uint64_t *o_u64) zda_noexcept;
 ZDA_API zda_bool zda_string_view_to_u32(zda_string_view_t sv, int base, uint32_t *o_u32) zda_noexcept;
 ZDA_API zda_bool zda_string_view_to_s64(zda_string_view_t sv, int base, int64_t *o_64) zda_noexcept;
@@ -54,5 +58,9 @@ static zda_inline zda_bool zda_string_view_to_s8(zda_string_view_t sv, int base,
     }
     return zda_false;
 }
+
+#ifdef __cplusplus
+EXTERN_C_END
+#endif
 
 #endif
